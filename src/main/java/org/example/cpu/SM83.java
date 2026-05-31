@@ -71,6 +71,7 @@ public class SM83 {
 
         alu = new Alu(SoCData);
         idu = new Idu(SoCAddress, iduToAddressRegisters);
+        try { Class.forName("org.example.cpu.pipeline.instructions.InstructionRegistry"); } catch (Exception e) {}
     }
 
     /**
@@ -78,7 +79,6 @@ public class SM83 {
      * Il SoC chiama questo metodo a ogni ciclo di clock (T-Cycle).
      */
     public void pulse() {
-        // Passiamo 'this' (la CPU stessa) all'engine interno
         controlUnit.pulse(this);
     }
 
@@ -86,7 +86,6 @@ public class SM83 {
      * Metodo di diagnostica per i test per sapere in che stato si trova la pipeline.
      */
     public String getPipelineStatus() {
-        // Se l'engine ha un metodo per ottenere lo stato corrente (es. un getter per l'enum)
         return this.engine.getCurrentStage().toString();
     }
 }

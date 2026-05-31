@@ -2,10 +2,11 @@ package org.example.cpu.pipeline.instructions;
 
 import org.example.cpu.SM83;
 
-public abstract sealed class CpuInstruction permits Opcode_LdAHl, Opcode_LdAn, Opcode_LdBa, Opcode_Nop, UnimplementedInstruction
+public abstract sealed class CpuInstruction permits Opcode_LdAn, Opcode_LdBa, Opcode_LdRegHl, Opcode_Nop, UnimplementedInstruction
 {
 
     protected int currentStep = 0;
+    protected int currentOpcode = 0;
     protected boolean finished = false;
 
     /**
@@ -14,6 +15,12 @@ public abstract sealed class CpuInstruction permits Opcode_LdAHl, Opcode_LdAn, O
     public final void prepare() {
         this.currentStep = 0;
         this.finished = false;
+    }
+
+
+
+    public void setTriggeredOpcode(int currentOpcode) {
+        this.currentOpcode = currentOpcode;
     }
 
     /**

@@ -34,6 +34,7 @@ public class ExecutionEngine {
             case DECODE:
                 int currentOpcode = cpu.IR.get();
                 this.currentInstruction = InstructionRegistry.get(currentOpcode);
+                this.currentInstruction.setTriggeredOpcode(currentOpcode);
                 this.currentInstruction.prepare();
                 break;
 
