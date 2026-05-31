@@ -40,4 +40,12 @@ public class RegisterPair implements BusWriter {
     public void emit() {
         SoCAddress.broadcast(this, new AddressData(get()));
     }
+
+    public Register getHigh() {
+        return this.high;
+    }
+
+    public Register getLow() {
+        return this.low;
+    }
 }

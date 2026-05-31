@@ -3,7 +3,7 @@ package org.example.cpu.pipeline.instructions;
 import org.example.cpu.Register;
 import org.example.cpu.SM83;
 
-public abstract sealed class CpuInstruction permits Opcode_LdAbsolute, Opcode_LdHighRam, Opcode_LdHlIncDec, Opcode_LdRegHl, Opcode_LdRegImmediate, Opcode_LdRegIndirect, Opcode_LdRegReg, Opcode_Nop, UnimplementedInstruction
+public abstract sealed class CpuInstruction permits Opcode_LdAbsolute, Opcode_LdAbsoluteSP, Opcode_LdHighRam, Opcode_LdHlIncDec, Opcode_LdReg16Immediate, Opcode_LdRegHl, Opcode_LdRegImmediate, Opcode_LdRegIndirect, Opcode_LdRegReg, Opcode_LdSpHl, Opcode_Nop, Opcode_Pop, Opcode_Push, UnimplementedInstruction
 {
 
     protected int currentStep = 0;
@@ -91,6 +91,43 @@ public abstract sealed class CpuInstruction permits Opcode_LdAbsolute, Opcode_Ld
             case 5 -> cpu.L;
             case 7 -> cpu.A;
             default -> throw new IllegalArgumentException("Indice registro invalido: " + index);
+        };
+    }
+
+    protected record Contextual16BitRef(
+            java.util.function.IntSupplier getter,
+            java.util.function.IntConsumer setter,
+            Runnable emitter,
+            Register highReg,  // Registro High a 8-bit (sarà null per SP)
+            Register lowReg    // Registro Low a 8-bit (sarà null per SP)
+    ) {
+        public int get() { return getter.getAsInt(); }
+        public void set(int val) { setter.accept(val); }
+        public void emit() { emitter.run(); } // Chiama il metodo di emit corretto!
+    }
+
+    /**
+     * Risolve dinamicamente il puntatore o la coppia a 16-bit standard (BC, DE, HL, SP).
+     */
+    protected final Contextual16BitRef resolveRegister16(int opcode, SM83 cpu) {
+        int regIndex = (opcode >> 4) & 0x03;
+        return switch (regIndex) {
+            case 0 -> new Contextual16BitRef(cpu.BC::get, cpu.BC::set, cpu.BC::emit, cpu.BC.getHigh(), cpu.BC.getLow());
+            case 1 -> new Contextual16BitRef(cpu.DE::get, cpu.DE::set, cpu.DE::emit, cpu.DE.getHigh(), cpu.DE.getLow());
+            case 2 -> new Contextual16BitRef(cpu.HL::get, cpu.HL::set, cpu.HL::emit, cpu.HL.getHigh(), cpu.HL.getLow());
+            case 3 -> new Contextual16BitRef(cpu.SP::get, cpu.SP::setValue, cpu.SP::emitAddress, null, null); // SP non ha sotto-registri
+            default -> throw new IllegalArgumentException("Indice registro 16-bit invalido: " + regIndex);
+        };
+    }
+
+    protected final Contextual16BitRef resolveStackRegister16(int opcode, SM83 cpu) {
+        int regIndex = (opcode >> 4) & 0x03;
+        return switch (regIndex) {
+            case 0 -> new Contextual16BitRef(cpu.BC::get, cpu.BC::set, cpu.BC::emit, cpu.BC.getHigh(), cpu.BC.getLow());
+            case 1 -> new Contextual16BitRef(cpu.DE::get, cpu.DE::set, cpu.DE::emit, cpu.DE.getHigh(), cpu.DE.getLow());
+            case 2 -> new Contextual16BitRef(cpu.HL::get, cpu.HL::set, cpu.HL::emit, cpu.HL.getHigh(), cpu.HL.getLow());
+            case 3 -> new Contextual16BitRef(cpu.AF::get, cpu.AF::set, cpu.AF::emit, cpu.AF.getHigh(), cpu.AF.getLow());
+            default -> throw new IllegalArgumentException("Indice registro Stack 16-bit invalido: " + regIndex);
         };
     }
 }
