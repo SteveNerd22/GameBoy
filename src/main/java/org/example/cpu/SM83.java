@@ -3,7 +3,7 @@ package org.example.cpu;
 import org.example.bus.*;
 import org.example.cpu.pipeline.ExecutionEngine;
 
-public class SM83 {
+public class SM83 implements BusWriter {
 
 
     public final Register IR, IE;
@@ -59,10 +59,10 @@ public class SM83 {
         this.L = new Register(SoCData);
 
         // --- CREAZIONE DELLE COPPIE (Sopra i registri appena nati) ---
-        this.AF = new RegisterPair(this.A, this.F);
-        this.BC = new RegisterPair(this.B, this.C);
-        this.DE = new RegisterPair(this.D, this.E);
-        this.HL = new RegisterPair(this.H, this.L);
+        this.AF = new RegisterPair(this.A, this.F, SoCAddress);
+        this.BC = new RegisterPair(this.B, this.C, SoCAddress);
+        this.DE = new RegisterPair(this.D, this.E, SoCAddress);
+        this.HL = new RegisterPair(this.H, this.L, SoCAddress);
 
         // --- 4. POINTER REGISTERS (16-bit Architecture) ---
         // Dedicated layout for memory management and the internal IDU feedback loop

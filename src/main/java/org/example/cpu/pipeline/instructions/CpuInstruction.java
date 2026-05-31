@@ -1,8 +1,9 @@
 package org.example.cpu.pipeline.instructions;
 
+import org.example.cpu.Register;
 import org.example.cpu.SM83;
 
-public abstract sealed class CpuInstruction permits Opcode_LdAn, Opcode_LdBa, Opcode_LdRegHl, Opcode_Nop, UnimplementedInstruction
+public abstract sealed class CpuInstruction permits Opcode_LdAbsolute, Opcode_LdHighRam, Opcode_LdHlIncDec, Opcode_LdRegHl, Opcode_LdRegImmediate, Opcode_LdRegIndirect, Opcode_LdRegReg, Opcode_Nop, UnimplementedInstruction
 {
 
     protected int currentStep = 0;
@@ -66,5 +67,30 @@ public abstract sealed class CpuInstruction permits Opcode_LdAn, Opcode_LdBa, Op
      */
     protected final void terminate() {
         this.finished = true;
+    }
+
+    Register resolveDestRegister(int opcode, SM83 cpu) {
+        // Spostiamo a destra di 3 bit e isoliamo gli ultimi 3 (maschera 0x07, cioè binario 111)
+        int regIndex = (opcode >> 3) & 0x07;
+        return mapIndexToRegister(regIndex, cpu);
+    }
+
+    Register resolveSourceRegister(int opcode, SM83 cpu) {
+        // Isoliamo direttamente gli ultimi 3 bit (maschera 0x07)
+        int regIndex = opcode & 0x07;
+        return mapIndexToRegister(regIndex, cpu);
+    }
+
+    private Register mapIndexToRegister(int index, SM83 cpu) {
+        return switch (index) {
+            case 0 -> cpu.B;
+            case 1 -> cpu.C;
+            case 2 -> cpu.D;
+            case 3 -> cpu.E;
+            case 4 -> cpu.H;
+            case 5 -> cpu.L;
+            case 7 -> cpu.A;
+            default -> throw new IllegalArgumentException("Indice registro invalido: " + index);
+        };
     }
 }

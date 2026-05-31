@@ -1,9 +1,10 @@
 package org.example.cpu.pipeline.instructions;
 
+import org.example.cpu.Register;
 import org.example.cpu.SM83;
 
-@CpuOpcode(value = 0x3E)
-public final class Opcode_LdAn extends CpuInstruction {
+@CpuOpcode(value = {0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E, 0x3E})
+public final class Opcode_LdRegImmediate extends CpuInstruction {
 
     @Override
     public void executeCycle(SM83 cpu) {
@@ -17,7 +18,9 @@ public final class Opcode_LdAn extends CpuInstruction {
 
             case 1:
                 int immediateValue = sampleDataBus(cpu);
-                cpu.A.setValue(immediateValue);
+
+                Register targetRegister = resolveDestRegister(this.currentOpcode, cpu);
+                targetRegister.setValue(immediateValue);
 
                 terminate();
                 break;

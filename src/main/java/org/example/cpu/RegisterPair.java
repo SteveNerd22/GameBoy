@@ -1,13 +1,19 @@
 package org.example.cpu;
 
-public class RegisterPair {
+import org.example.bus.AddressBus;
+import org.example.bus.BusWriter;
+import org.example.bus.data.AddressData;
+
+public class RegisterPair implements BusWriter {
 
     private final Register high;
     private final Register low;
+    private final AddressBus SoCAddress;
 
-    public RegisterPair(Register high, Register low) {
+    public RegisterPair(Register high, Register low, AddressBus SoCAddress) {
         this.high = high;
         this.low = low;
+        this.SoCAddress = SoCAddress;
     }
 
     /**
@@ -29,5 +35,9 @@ public class RegisterPair {
 
         high.setValue(hi);
         low.setValue(lo);
+    }
+
+    public void emit() {
+        SoCAddress.broadcast(this, new AddressData(get()));
     }
 }
