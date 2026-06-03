@@ -1,5 +1,6 @@
 package org.example.cpu;
 
+import org.example.bus.AddressBus;
 import org.example.bus.Bus;
 import org.example.bus.BusReader;
 import org.example.bus.BusWriter;
@@ -7,10 +8,10 @@ import org.example.bus.data.AddressData;
 
 public class Idu implements BusWriter, BusReader<AddressData> {
 
-    private final Bus<AddressData> privateIduBus;
-    private final Bus<AddressData> SoCAddressBus;
+    private final AddressBus privateIduBus;
+    private final AddressBus SoCAddressBus;
 
-    public Idu(Bus<AddressData> SoCAddressBus, Bus<AddressData> privateIduBus) {
+    public Idu(AddressBus SoCAddressBus, AddressBus privateIduBus) {
         this.privateIduBus = privateIduBus;
         this.SoCAddressBus = SoCAddressBus;
         privateIduBus.registerWriter(this);
@@ -23,6 +24,19 @@ public class Idu implements BusWriter, BusReader<AddressData> {
     public void increment(int currentAddress) {
         int nextAddress = (currentAddress + 1) & 0xFFFF;
         privateIduBus.broadcast(this, new AddressData(nextAddress));
+    }
+
+    public void decrement(int currentAddress) {
+        int nextAddress = (currentAddress -1) & 0xFFFF;
+        privateIduBus.broadcast(this, new AddressData(nextAddress));
+    }
+
+    public void incrementFormSoC() {
+        increment(SoCAddressBus.sampleAddress());
+    }
+
+    public void decrementFormSoC() {
+        decrement(SoCAddressBus.sampleAddress());
     }
 
     @Override

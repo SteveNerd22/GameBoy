@@ -2,20 +2,17 @@ package org.example.cpu.pipeline.instructions;
 
 import org.example.cpu.SM83;
 
-@CpuOpcode(value = 0xF9)
+@CpuOpcode(value = {0xF9}) // LD SP, HL
 public final class Opcode_LdSpHl extends CpuInstruction {
+
     @Override
-    public void executeCycle(SM83 cpu) {
-        switch (this.currentStep) {
-            case 0 -> {
-                // M-CYCLE 1: Trasferimento interno dei 16-bit
-                cpu.SP.setValue(cpu.HL.get());
-                this.currentStep = 1;
-            }
-            case 1 -> {
-                // M-CYCLE 2: Ciclo di ritardo interno per stabilizzazione circuitale
-                terminate();
-            }
+    protected boolean executeStep(int step, int opcode, SM83 cpu) {
+        if (step == 0) {
+            cpu.SP.set(cpu.HL.get());
+
+            return true;
         }
+
+        throw new IllegalStateException("Step non valido per LD SP, HL: " + step);
     }
 }

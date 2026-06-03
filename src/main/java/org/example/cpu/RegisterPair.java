@@ -1,51 +1,79 @@
 package org.example.cpu;
 
 import org.example.bus.AddressBus;
-import org.example.bus.BusWriter;
+import org.example.bus.DataBus;
 import org.example.bus.data.AddressData;
 
-public class RegisterPair implements BusWriter {
-
+public class RegisterPair implements IRegister {
     private final Register high;
     private final Register low;
-    private final AddressBus SoCAddress;
+    private final AddressBus soCAddress;
 
-    public RegisterPair(Register high, Register low, AddressBus SoCAddress) {
+    private final AddressBus iduToAddressRegisters;
+
+    /**
+     * Collega direttamente due celle di registro a 8-bit preesistenti per formare
+     * un'unità funzionale a 16-bit, mappandola sulle rispettive linee dei bus di indirizzo.
+     *
+     * @param high                  Il registro a 8-bit destinato a ospitare la metà più significativa (MSB, bit 8-15).
+     * @param low                   Il registro a 8-bit destinato a ospitare la metà meno significativa (LSB, bit 0-7).
+     * @param soCAddress            L'Address Bus principale del sistema, utilizzato dalla coppia per fare il broadcast di indirizzi a 16-bit.
+     * @param iduToAddressRegisters L'bus privato di ritorno dall'IDU (Incrementer/Decrementer Unit), usato per aggiornare al volo l'intera coppia.
+     */
+    public RegisterPair(Register high, Register low, AddressBus soCAddress, AddressBus iduToAddressRegisters) {
         this.high = high;
         this.low = low;
-        this.SoCAddress = SoCAddress;
+        this.soCAddress = soCAddress;
+        this.iduToAddressRegisters = iduToAddressRegisters;
     }
 
     /**
-     * Combina i due registri a 8-bit per restituire il valore a 16-bit.
-     * Es: High = 0xC0, Low = 0x12 -> Risultato = 0xC012
+     * Costruttore accoppiato per registri ad accesso ALU (es. coppia AF o BC).
+     * Genera internamente due registri anonimi a 8-bit collegati al SoCDataBus, ai canali privati dell'ALU
+     * e ai canali internalData per i passaggi interni.
      */
+    public RegisterPair(DataBus SocDataBus, AddressBus SoCAddress, AddressBus iduToAddressRegisters,
+                        DataBus aluBus1, DataBus aluBus2, DataBus internalData1, DataBus internalData2) {
+        this (new Register(SocDataBus, aluBus1, internalData1), new Register(SocDataBus, aluBus2, internalData2),
+                SoCAddress,  iduToAddressRegisters);
+    }
+
+    /**
+     * Costruttore dedicato a SP e PC (Puntatori a 16-bit puri).
+     * Genera due metà a 8-bit isolate elettricamente dall'ALU e dal bus interno. Non istanzia alcun pass-gate
+     * verso i bus privati delle unità interne, poiché questi puntatori interagiscono
+     * solo con il SoCDataBus (fase di fetch/stack) e con l'IDU per l'incremento/decremento.
+     */
+    public RegisterPair(DataBus SocDataBus, AddressBus SoCAddress, AddressBus iduToAddressRegisters) {
+        this(new Register(SocDataBus, null, null), new Register(SocDataBus, null, null),
+                SoCAddress, iduToAddressRegisters);
+    }
+
+    @Override
     public int get() {
-        int hi = high.get() & 0xFF;
-        int lo = low.get() & 0xFF;
-        return (hi << 8) | lo;
+        return ((this.high.get() & 0xFF) << 8) | (this.low.get() & 0xFF);
     }
 
-    /**
-     * Prende un valore a 16-bit, lo spacca in due e aggiorna i registri interni.
-     */
+    @Override
     public void set(int value) {
-        int hi = (value >> 8) & 0xFF;
-        int lo = value & 0xFF;
-
-        high.setValue(hi);
-        low.setValue(lo);
+        this.high.set((value >> 8) & 0xFF);
+        this.low.set(value & 0xFF);
     }
 
+    @Override
     public void emit() {
-        SoCAddress.broadcast(this, new AddressData(get()));
+        if(soCAddress != null)
+            this.soCAddress.broadcast(this, new AddressData(get()));
     }
 
-    public Register getHigh() {
-        return this.high;
+    public void sampleFromIduBus() {
+        if (iduToAddressRegisters != null) {
+            int address = iduToAddressRegisters.sampleAddress();
+            this.high.set((address >> 8) & 0xFF);
+            this.low.set(address & 0xFF);
+        }
     }
 
-    public Register getLow() {
-        return this.low;
-    }
+    public Register getHigh() { return this.high; }
+    public Register getLow() { return this.low; }
 }

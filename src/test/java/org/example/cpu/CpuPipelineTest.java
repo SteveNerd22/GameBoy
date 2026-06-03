@@ -1,54 +1,34 @@
 package org.example.cpu;
 
-import org.example.bus.AddressBus;
-import org.example.bus.DataBus;
-import org.example.bus.InterruptBus;
-import org.example.mmu.MMU; // Importiamo il nostro nuovo centralino
-
 public class CpuPipelineTest {
+
     public static void main(String[] args) {
-        System.out.println("=== INITIALIZING SoC BUSES ===");
-        InterruptBus interruptBus = new InterruptBus();
-        DataBus dataBus = new DataBus();
-        AddressBus addressBus = new AddressBus();
+        System.out.println("============== SUITE DI TEST CPU PIPELINE ==============");
 
-        System.out.println("=== CREATING HARDWARE ===");
-        // La CPU rimane identica, legata ai suoi bus
-        SM83 cpu = new SM83(interruptBus, dataBus, addressBus);
+        // --- TEST 1: Solo NOP ---
+        System.out.println("\n[SCENARIO 1: ESECUZIONE NOP]");
+        CpuTestContext testNop = new CpuTestContext(new int[]{ 0x00 });
+        CpuTestRunner.run(testNop);
 
-        // Sostituiamo il MockMemory con la MMU ufficiale legata ai bus
-        MMU mmu = new MMU(addressBus, dataBus);
 
-        // Il nostro programma di test (NOP, LD A, 0x42, LD B, A)
-        int[] program = {
-                0x00,       // NOP
-                0x3E, 0x42, // LD A, 0x42
-                0x47        // LD B, A
-        };
+        // --- TEST 2: LD A, n ---
+        System.out.println("\n[SCENARIO 2: CARICAMENTO IMMEDIATO IN A]");
+        CpuTestContext testLdImmediate = new CpuTestContext(new int[]{ 0x3E, 0x42 });
+        CpuTestRunner.run(testLdImmediate);
 
-        // Carichiamo il programma direttamente nella ROM della cartuccia virtuale
-        mmu.loadCartridge(program);
 
-        // Puntiamo il Program Counter all'inizio della ROM
-        cpu.PC.setValue(0x0000);
+        // --- TEST 3: LD (HL), r (Scrittura in RAM) ---
+        System.out.println("\n[SCENARIO 3: SCRITTURA INDIRETTA IN RAM VIA HL]");
+        CpuTestContext testStoreToRam = new CpuTestContext(new int[]{ 0x3E, 0x99, 0x77 })
+                .setRegister("HL", 0xC000); // Prepariamo l'indirizzo di destinazione
+        CpuTestRunner.run(testStoreToRam);
 
-        System.out.println("\n=== STARTING EMULATION LOOP ===");
-        System.out.printf("Initial State -> PC: 0x%04X, A: 0x%02X, B: 0x%02X\n\n", cpu.PC.get(), cpu.A.get(), cpu.B.get());
 
-        for (int tick = 1; tick <= 10; tick++) {
-            String macroState = cpu.getPipelineStatus();
-
-            // L'oscillatore virtuale batte il tempo sulla CPU.
-            // La MMU risponderà passivamente tramite le callback dei bus!
-            cpu.pulse();
-
-            System.out.printf("Tick %02d | Pipeline: %-7s | PC: 0x%04X | A: 0x%02X | B: 0x%02X\n",
-                    tick,
-                    macroState,
-                    cpu.PC.get(),
-                    cpu.A.get(),
-                    cpu.B.get()
-            );
-        }
+        // --- TEST 4: LD r, (HL) (Lettura da RAM) ---
+        System.out.println("\n[SCENARIO 4: LETTURA INDIRETTA DA RAM VIA HL]");
+        CpuTestContext testLoadFromRam = new CpuTestContext(new int[]{ 0x46 }) // LD B, (HL)
+                .setRegister("HL", 0xC000)
+                .writeRam(0xC000, 0x55); // Prepariamo il dato esatto nella RAM del SoC
+        CpuTestRunner.run(testLoadFromRam);
     }
 }

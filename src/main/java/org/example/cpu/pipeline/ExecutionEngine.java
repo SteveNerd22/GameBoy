@@ -22,36 +22,30 @@ public class ExecutionEngine {
     public void pulse(SM83 cpu) {
         this.stateTicks++;
 
-        switch (this.currentStep) {
-            case FETCH:
-                cpu.PC.emitAddress();
-                cpu.idu.increment(cpu.PC.get());
-
-                int opcode = cpu.SoCData.sampleByte();
-                cpu.IR.setValue(opcode);
-                break;
-
-            case DECODE:
-                int currentOpcode = cpu.IR.get();
-                this.currentInstruction = InstructionRegistry.get(currentOpcode);
-                this.currentInstruction.setTriggeredOpcode(currentOpcode);
-                this.currentInstruction.prepare();
-                break;
-
-            case EXECUTE:
-                if (this.currentInstruction != null) {
-                    this.currentInstruction.executeCycle(cpu);
-                }
-                break;
+        if (this.stateTicks < 4) {
+            return;
         }
 
-        if (this.currentStep.shouldTransition(this.stateTicks, this)) {
-            this.currentStep = this.currentStep.getNext(cpu, this);
-            this.stateTicks = 0;
+        if (this.currentInstruction == null || this.currentInstruction.isFinished()) {
+            int currentOpcode = cpu.IR.get();
+            this.currentInstruction = InstructionRegistry.get(currentOpcode);
+            this.currentInstruction.prepare(currentOpcode);
         }
+
+        this.currentInstruction.execute(cpu);
+
+        if (this.currentInstruction.isFinished()) {
+
+            cpu.PC.emit();
+            cpu.idu.incrementFormSoC();
+            cpu.PC.sampleFromIduBus(); // PC = PC + 1
+
+            cpu.IR.sampleSoCBus(); // IR = (PC)
+        }
+
+        this.stateTicks = 0;
     }
 
-    // API interna per permettere all'enum di ispezionare l'istruzione in EXECUTE
     CpuInstruction getCurrentInstruction() {
         return this.currentInstruction;
     }

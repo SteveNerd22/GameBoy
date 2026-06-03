@@ -7,23 +7,18 @@ import org.example.cpu.SM83;
 public final class Opcode_LdRegImmediate extends CpuInstruction {
 
     @Override
-    public void executeCycle(SM83 cpu) {
-        switch (this.currentStep) {
-            case 0:
-                emitProgramCounter(cpu);
+    protected boolean executeStep(int step, int opcode, SM83 cpu) {
+        switch (step) {
+            case 0 -> {
+                cpu.PC.emit();
+
+                Register targetRegister = resolveDestRegister(opcode, cpu);
+                targetRegister.sampleSoCBus();
                 advanceProgramCounter(cpu);
 
-                this.currentStep = 1;
-                break;
-
-            case 1:
-                int immediateValue = sampleDataBus(cpu);
-
-                Register targetRegister = resolveDestRegister(this.currentOpcode, cpu);
-                targetRegister.setValue(immediateValue);
-
-                terminate();
-                break;
+                return true;
+            }
+            default -> throw new IllegalStateException("Step non valido per LD r, n: " + step);
         }
     }
 }

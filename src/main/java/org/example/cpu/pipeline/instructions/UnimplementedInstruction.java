@@ -12,10 +12,11 @@ public final class UnimplementedInstruction extends CpuInstruction {
     }
 
     @Override
-    public void executeCycle(SM83 cpu) {
+    protected boolean executeStep(int step, int opcode, SM83 cpu) {
         String prefix = isCb ? "0xCB " : "";
         System.err.printf("FATAL: Opcode %s0x%02X is not implemented yet! PC: 0x%04X\n",
                 prefix, opcode, cpu.PC.get());
         System.exit(1);
+        return false;
     }
 }

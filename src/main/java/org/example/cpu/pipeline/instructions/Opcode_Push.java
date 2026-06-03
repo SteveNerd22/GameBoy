@@ -1,45 +1,54 @@
 package org.example.cpu.pipeline.instructions;
 
-import org.example.bus.data.AddressData;
+import org.example.cpu.RegisterPair;
 import org.example.cpu.SM83;
 
-@CpuOpcode(value = {0xC5, 0xD5, 0xE5, 0xF5})
+@CpuOpcode(value = {0xC5, 0xD5, 0xE5, 0xF5}) // PUSH BC, DE, HL, AF
 public final class Opcode_Push extends CpuInstruction {
 
     @Override
-    public void executeCycle(SM83 cpu) {
-        // Risolviamo il reference al registro a 16-bit che dobbiamo pushare
-        Contextual16BitRef regSource = resolveStackRegister16(this.currentOpcode, cpu);
-
-        switch (this.currentStep) {
+    protected boolean executeStep(int step, int opcode, SM83 cpu) {
+        switch (step) {
             case 0 -> {
-                // Lo stack cresce all'indietro: decrementiamo lo Stack Pointer
-                cpu.SP.setValue(cpu.SP.get() - 1);
+                cpu.SP.emit();
 
-                // 1. Lo Stack Pointer guida l'Address Bus
-                cpu.SP.emitAddress();
+                cpu.idu.decrementFormSoC();
+                cpu.SP.sampleFromIduBus();
 
-                // 2. HARDWARE PURO: Il mezzo registro ALTO (es. B) pulsa direttamente sul Data Bus!
-                regSource.highReg().emit();
-
-                this.currentStep = 1;
+                return false;
             }
             case 1 -> {
-                // Decrementiamo SP per il secondo byte
-                cpu.SP.setValue(cpu.SP.get() - 1);
+                cpu.SP.emit();
 
-                // 1. Lo Stack Pointer guida l'Address Bus sul nuovo indirizzo
-                cpu.SP.emitAddress();
+                RegisterPair sourcePair = resolveSourcePair(opcode, cpu);
+                sourcePair.getHigh().emitToInternalData();
+                sourcePair.getHigh().emit();
 
-                // 2. HARDWARE PURO: Il mezzo registro BASSO (es. C) pulsa direttamente sul Data Bus!
-                regSource.lowReg().emit();
+                cpu.idu.decrementFormSoC();
+                cpu.SP.sampleFromIduBus();
 
-                this.currentStep = 2;
+                return false;
             }
             case 2 -> {
-                // Ciclo di stabilità hardware finale per la scrittura della RAM
-                terminate();
+                cpu.SP.emit();
+
+                RegisterPair sourcePair = resolveSourcePair(opcode, cpu);
+                sourcePair.getLow().emitToInternalData();
+                sourcePair.getLow().emit();
+
+                return true;
             }
+            default -> throw new IllegalStateException("Step non valido per PUSH rr: " + step);
         }
+    }
+
+    private RegisterPair resolveSourcePair(int opcode, SM83 cpu) {
+        return switch ((opcode >> 4) & 0x03) {
+            case 0 -> cpu.BC;
+            case 1 -> cpu.DE;
+            case 2 -> cpu.HL;
+            case 3 -> cpu.AF;
+            default -> throw new IllegalArgumentException("Opcode non valido per PUSH: " + opcode);
+        };
     }
 }

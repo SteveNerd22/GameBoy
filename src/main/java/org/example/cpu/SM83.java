@@ -7,10 +7,15 @@ public class SM83 implements BusWriter {
 
 
     public final Register IR, IE;
-    public final Register A, F, B, C, D, E, H, L;
+    public final Register A, B, C, D, E, H, L;
+    public final FlagsRegister F;
 
     public final RegisterPair AF, BC, DE, HL;
-    public final PointerRegister PC, SP;
+    public final RegisterPair PC, SP;
+
+    public final Register W;
+    public final Register Z;
+    public final RegisterPair WZ;
 
     public final ControlUnit controlUnit;
     public final Alu alu;
@@ -22,7 +27,7 @@ public class SM83 implements BusWriter {
 
     private final ExecutionEngine engine;
 
-    SM83(InterruptBus SoCInterrupts, DataBus SoCData, AddressBus SoCAddress) {
+    public SM83(InterruptBus SoCInterrupts, DataBus SoCData, AddressBus SoCAddress) {
         this.SoCInterrupts = SoCInterrupts;
         this.SoCData = SoCData;
         this.SoCAddress = SoCAddress;
@@ -30,48 +35,43 @@ public class SM83 implements BusWriter {
         engine = new ExecutionEngine();
         controlUnit = new ControlUnit(SoCInterrupts, engine);
 
+        // Linee di bus interne private del Core CPU
         AddressBus iduToAddressRegisters = new AddressBus();
         DataBus regToAluBus1 = new DataBus();
         DataBus regToAluBus2 = new DataBus();
+        DataBus regToRegBus =  new DataBus();
 
-        // --- 1. SPECIAL REGISTERS ---
-        // IR (Instruction Register) only talks to the internal ALU buses to decode/execute logic
-        this.IR = new Register(regToAluBus1, regToAluBus2);
+        IR = new Register(SoCData, regToAluBus1, regToRegBus);
+        IE = new Register(SoCData, regToAluBus2, regToRegBus);
 
-        // IE (Interrupt Enable) sits on SoCData and can feed the ALU logic
-        this.IE = new Register(SoCData, regToAluBus1, regToAluBus2);
+        A = new Register(SoCData, regToAluBus1, regToRegBus);
+        F = new FlagsRegister(SoCData, regToAluBus2, regToRegBus);
+        AF = new RegisterPair(A, F, SoCAddress, iduToAddressRegisters);
 
-        // --- 2. THE CHOSEN ONES (Direct ALU Access) ---
-        // A (Accumulator) and F (Flags) are hardwired to everything data-related
-        this.A = new Register(SoCData, regToAluBus1, regToAluBus2);
-        this.F = new Register(SoCData, regToAluBus1, regToAluBus2);
+        BC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
+        B = BC.getHigh();
+        C = BC.getLow();
 
-        // B is often used as a primary operand for 8-bit math, so it hooks to the ALU buses
-        this.B = new Register(SoCData, regToAluBus1, regToAluBus2);
+        DE = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
+        D = DE.getHigh();
+        E = DE.getLow();
 
-        // --- 3. GENERAL PURPOSE REGISTERS (SoC Data Only) ---
-        // These registers pass through the main data lines to move data around,
-        // but they don't have a direct private highway into the ALU
-        this.C = new Register(SoCData);
-        this.D = new Register(SoCData);
-        this.E = new Register(SoCData);
-        this.H = new Register(SoCData);
-        this.L = new Register(SoCData);
+        HL = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
+        H = HL.getHigh();
+        L = HL.getLow();
 
-        // --- CREAZIONE DELLE COPPIE (Sopra i registri appena nati) ---
-        this.AF = new RegisterPair(this.A, this.F, SoCAddress);
-        this.BC = new RegisterPair(this.B, this.C, SoCAddress);
-        this.DE = new RegisterPair(this.D, this.E, SoCAddress);
-        this.HL = new RegisterPair(this.H, this.L, SoCAddress);
+        PC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
+        SP = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
 
-        // --- 4. POINTER REGISTERS (16-bit Architecture) ---
-        // Dedicated layout for memory management and the internal IDU feedback loop
-        this.PC = new PointerRegister(SoCData, SoCAddress, iduToAddressRegisters);
-        this.SP = new PointerRegister(SoCData, SoCAddress, iduToAddressRegisters);
+        W = new Register(SoCData, null, regToRegBus);
+        Z = new Register(SoCData, null, regToRegBus);
+        WZ = new RegisterPair(W, Z, SoCAddress, null);
 
-        alu = new Alu(SoCData);
+        alu = new Alu(SoCData, regToAluBus1, regToAluBus2);
         idu = new Idu(SoCAddress, iduToAddressRegisters);
-        try { Class.forName("org.example.cpu.pipeline.instructions.InstructionRegistry"); } catch (Exception e) {}
+        try {
+            Class.forName("org.example.cpu.pipeline.instructions.InstructionRegistry");
+        } catch (Exception _) {}
     }
 
     /**
