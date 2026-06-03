@@ -10,8 +10,8 @@ public final class FlagsRegister extends Register {
     public static final int MASK_H = 0x20; // Bit 5: Half-Carry
     public static final int MASK_C = 0x10; // Bit 4: Carry
 
-    public FlagsRegister(DataBus soCData, DataBus aluBus, DataBus internalData) {
-        super(soCData, aluBus, internalData);
+    public FlagsRegister(DataBus soCData, DataBus aluBus1, DataBus aluBus2, DataBus internalData) {
+        super(soCData, aluBus1, aluBus2, internalData);
     }
 
     /**

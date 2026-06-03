@@ -34,7 +34,7 @@ public class RegisterPair implements IRegister {
      */
     public RegisterPair(DataBus SocDataBus, AddressBus SoCAddress, AddressBus iduToAddressRegisters,
                         DataBus aluBus1, DataBus aluBus2, DataBus internalData1, DataBus internalData2) {
-        this (new Register(SocDataBus, aluBus1, internalData1), new Register(SocDataBus, aluBus2, internalData2),
+        this (new Register(SocDataBus, aluBus1, aluBus2, internalData1), new Register(SocDataBus, aluBus1, aluBus2, internalData2),
                 SoCAddress,  iduToAddressRegisters);
     }
 
@@ -45,7 +45,7 @@ public class RegisterPair implements IRegister {
      * solo con il SoCDataBus (fase di fetch/stack) e con l'IDU per l'incremento/decremento.
      */
     public RegisterPair(DataBus SocDataBus, AddressBus SoCAddress, AddressBus iduToAddressRegisters) {
-        this(new Register(SocDataBus, null, null), new Register(SocDataBus, null, null),
+        this(new Register(SocDataBus, null, null,null), new Register(SocDataBus, null,null, null),
                 SoCAddress, iduToAddressRegisters);
     }
 

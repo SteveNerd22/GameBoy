@@ -41,30 +41,30 @@ public class SM83 implements BusWriter {
         DataBus regToAluBus2 = new DataBus();
         DataBus regToRegBus =  new DataBus();
 
-        IR = new Register(SoCData, regToAluBus1, regToRegBus);
-        IE = new Register(SoCData, regToAluBus2, regToRegBus);
+        IR = new Register(SoCData, null, null, regToRegBus);
+        IE = new Register(SoCData, null, null, regToRegBus);
 
-        A = new Register(SoCData, regToAluBus1, regToRegBus);
-        F = new FlagsRegister(SoCData, regToAluBus2, regToRegBus);
+        A = new Register(SoCData, regToAluBus1, regToAluBus2, regToRegBus);
+        F = new FlagsRegister(SoCData, null, regToAluBus2, regToRegBus);
         AF = new RegisterPair(A, F, SoCAddress, iduToAddressRegisters);
 
-        BC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
+        BC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, null, regToAluBus2, regToRegBus, regToRegBus);
         B = BC.getHigh();
         C = BC.getLow();
 
-        DE = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
+        DE = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, null, regToAluBus2, regToRegBus, regToRegBus);
         D = DE.getHigh();
         E = DE.getLow();
 
-        HL = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
+        HL = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, null, regToAluBus2, regToRegBus, regToRegBus);
         H = HL.getHigh();
         L = HL.getLow();
 
         PC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
         SP = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
 
-        W = new Register(SoCData, null, regToRegBus);
-        Z = new Register(SoCData, null, regToRegBus);
+        W = new Register(SoCData, null, regToAluBus2, regToRegBus);
+        Z = new Register(SoCData, null, regToAluBus2, regToRegBus);
         WZ = new RegisterPair(W, Z, SoCAddress, null);
 
         alu = new Alu(SoCData, regToAluBus1, regToAluBus2);

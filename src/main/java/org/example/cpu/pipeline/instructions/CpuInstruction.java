@@ -4,7 +4,7 @@ import org.example.cpu.Register;
 import org.example.cpu.RegisterPair;
 import org.example.cpu.SM83;
 
-public abstract sealed class CpuInstruction permits Opcode_LdAIndirectBcDe, Opcode_LdAIndirectHlIncDec, Opcode_LdAIndirectImmediate16, Opcode_LdHlSpImmediateSign8, Opcode_LdIndirectBcDeA, Opcode_LdIndirectHlImmediate, Opcode_LdIndirectHlIncDecA, Opcode_LdIndirectHlReg, Opcode_LdIndirectImmediate16A, Opcode_LdIndirectImmediate16Sp, Opcode_LdRegImmediate, Opcode_LdRegIndirectHl, Opcode_LdRegReg, Opcode_LdRegisterPairImmediate16, Opcode_LdSpHl, Opcode_LdhAIndirectC, Opcode_LdhAIndirectImmediate8, Opcode_LdhIndirectCA, Opcode_LdhIndirectImmediate8A, Opcode_Nop, Opcode_Pop, Opcode_Push, UnimplementedInstruction {
+public abstract sealed class CpuInstruction permits Opcode_AddIndirectHl, Opcode_AddRegister8, Opcode_LdAIndirectBcDe, Opcode_LdAIndirectHlIncDec, Opcode_LdAIndirectImmediate16, Opcode_LdHlSpImmediateSign8, Opcode_LdIndirectBcDeA, Opcode_LdIndirectHlImmediate, Opcode_LdIndirectHlIncDecA, Opcode_LdIndirectHlReg, Opcode_LdIndirectImmediate16A, Opcode_LdIndirectImmediate16Sp, Opcode_LdRegImmediate, Opcode_LdRegIndirectHl, Opcode_LdRegReg, Opcode_LdRegisterPairImmediate16, Opcode_LdSpHl, Opcode_LdhAIndirectC, Opcode_LdhAIndirectImmediate8, Opcode_LdhIndirectCA, Opcode_LdhIndirectImmediate8A, Opcode_Nop, Opcode_Pop, Opcode_Push, UnimplementedInstruction {
 
     private int currentStep = 0;
     private boolean finished = false;

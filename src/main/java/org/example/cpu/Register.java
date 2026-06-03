@@ -6,12 +6,13 @@ import org.example.bus.data.ByteData;
 public class Register implements IRegister {
     private int value;
     private final DataBus soCData;
-    private final DataBus aluBus;
+    private final DataBus aluBus1, aluBus2;
     private final DataBus internalData; // Il nuovo canale per la comunicazione inter-registro
 
-    public Register(DataBus soCData, DataBus aluBus, DataBus internalData) {
+    public Register(DataBus soCData, DataBus aluBus1, DataBus aluBus2, DataBus internalData) {
         this.soCData = soCData;
-        this.aluBus = aluBus;
+        this.aluBus1 = aluBus1;
+        this.aluBus2 = aluBus2;
         this.internalData = internalData;
     }
 
@@ -31,9 +32,14 @@ public class Register implements IRegister {
             this.soCData.broadcast(this, new ByteData(get()));
     }
 
-    public void emitToAluBus() {
-        if(aluBus != null)
-            this.aluBus.broadcast(this, new ByteData(get()));
+    public void emitToAluBus1() {
+        if(aluBus1 != null)
+            this.aluBus1.broadcast(this, new ByteData(get()));
+    }
+
+    public void emitToAluBus2() {
+        if(aluBus2 != null)
+            this.aluBus2.broadcast(this, new ByteData(get()));
     }
 
     /**
