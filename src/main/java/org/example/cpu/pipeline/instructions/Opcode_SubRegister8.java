@@ -4,10 +4,10 @@ import org.example.cpu.Register;
 import org.example.cpu.SM83;
 
 @CpuOpcode(value = {
-        0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x87, // ADD A, r
-        0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8F  // ADC A, r
+        0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x97, // SUB r
+        0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9F  // SBC A, r
 })
-public final class Opcode_AddRegister8 extends CpuInstruction {
+public final class Opcode_SubRegister8 extends CpuInstruction {
 
     @Override
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
@@ -17,10 +17,10 @@ public final class Opcode_AddRegister8 extends CpuInstruction {
             Register sourceReg = resolveSourceRegister(opcode, cpu);
             sourceReg.emitToAluBus2();
 
-            boolean isAdc = (opcode & 0x08) != 0;
-            boolean carryIn = isAdc && cpu.F.isCarrySet();
+            boolean isSbc = (opcode & 0x08) != 0;
+            boolean carryIn = isSbc && cpu.F.isCarrySet();
 
-            int aluFlags = cpu.alu.adc(carryIn);
+            int aluFlags = cpu.alu.sbc(carryIn);
 
             cpu.A.sampleSoCBus();
             cpu.F.set(aluFlags);
@@ -28,6 +28,6 @@ public final class Opcode_AddRegister8 extends CpuInstruction {
             return true;
         }
 
-        throw new IllegalStateException("Step non valido per ADD/ADC A, r: " + step);
+        throw new IllegalStateException("Step non valido per SUB/SBC A, r: " + step);
     }
 }
