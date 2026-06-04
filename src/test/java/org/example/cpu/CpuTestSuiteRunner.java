@@ -1,9 +1,7 @@
 package org.example.cpu;
 
+import org.example.GameBoy;
 import org.example.Main;
-import org.example.bus.AddressBus;
-import org.example.bus.DataBus;
-import org.example.bus.InterruptBus;
 import org.example.cpu.tests.CpuTestCase;
 import org.example.mmu.MMU;
 
@@ -25,13 +23,11 @@ public final class CpuTestSuiteRunner {
 
         Main.DEBUG = false;
 
-        DataBus SoCData = new DataBus();
-        AddressBus SoCAddress = new AddressBus();
-        InterruptBus SoCInterrupt = new InterruptBus();
+        GameBoy gameBoy = new GameBoy();
 
-        MMU mmu = new MMU(SoCAddress, SoCData);
+        MMU mmu = gameBoy.getMmu();
+        SM83 cpu = gameBoy.getCpu();
 
-        SM83 cpu = new SM83(SoCInterrupt, SoCData, SoCAddress);
         int totalClasses = tests.size();
         int passedClasses = 0;
         int totalAssertionsMade = 0;
