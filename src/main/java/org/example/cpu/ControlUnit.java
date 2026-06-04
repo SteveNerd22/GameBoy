@@ -38,4 +38,10 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
     public void onBusWrite(BusWriter sender, InterruptSignal data) {
         // Reazione immediata ad eventi asincroni sul bus degli interrupt (se necessaria)
     }
+
+    public void reset() {
+        internalCycleCounter = 0;
+        isHalting = false;
+        executionEngine.reset();
+    }
 }

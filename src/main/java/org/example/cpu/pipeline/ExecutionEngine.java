@@ -53,4 +53,10 @@ public class ExecutionEngine {
     public PipelineStep getCurrentStage() {
         return this.currentStep;
     }
+
+    public void reset() {
+        this.currentStep = PipelineStep.FETCH;
+        this.stateTicks = 0;
+        currentInstruction = null;
+    }
 }
