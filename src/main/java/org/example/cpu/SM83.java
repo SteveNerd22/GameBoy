@@ -61,7 +61,7 @@ public class SM83 implements BusWriter {
         L = HL.getLow();
 
         PC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
-        SP = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
+        SP = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, null, regToAluBus2, regToRegBus, regToRegBus);
 
         W = new Register(SoCData, null, regToAluBus2, regToRegBus);
         Z = new Register(SoCData, null, regToAluBus2, regToRegBus);

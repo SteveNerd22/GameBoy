@@ -179,4 +179,83 @@ public class Alu implements BusWriter {
         soCData.broadcast(this, new ByteData(result));
         return newFlags;
     }
+
+    /**
+     * CCF -> Complement Carry Flag.
+     * Inverte il bit del Carry, azzera N e H, preserva Z.
+     */
+    public int ccf(int currentFlags) {
+        int newFlags = currentFlags & FLAG_Z;
+        int oldCarry = currentFlags & FLAG_C;
+        int invertedCarry = oldCarry ^ FLAG_C;
+        return newFlags | invertedCarry;
+    }
+
+    /**
+     * SCF -> Set Carry Flag.
+     * Forza il bit del Carry a 1, azzera N e H, preserva Z.
+     */
+    public int scf(int currentFlags) {
+        int newFlags = currentFlags & FLAG_Z;
+        return newFlags | FLAG_C;
+    }
+
+    /**
+     * DAA -> Decimal Adjust Accumulator.
+     * Corregge il registro A per la codifica BCD dopo addizioni/sottrazioni.
+     * Spedisce il risultato corretto su SoCData.
+     */
+    public int daa(int currentFlags) {
+        int a = regToAluBus1.sampleByte() & 0xFF;
+
+        boolean isSub = (currentFlags & FLAG_N) != 0;
+        boolean hasH = (currentFlags & FLAG_H) != 0;
+        boolean hasC = (currentFlags & FLAG_C) != 0;
+
+        int correction = 0;
+        boolean setCarry = false;
+
+        if (!isSub) {
+            if (hasH || (a & 0x0F) > 9) {
+                correction |= 0x06;
+            }
+            if (hasC || a > 0x99) {
+                correction |= 0x60;
+                setCarry = true;
+            }
+            a = (a + correction) & 0xFF;
+        } else {
+            if (hasH) {
+                correction |= 0x06;
+            }
+            if (hasC) {
+                correction |= 0x60;
+            }
+            if (hasC) {
+                setCarry = true;
+            }
+            a = (a - correction) & 0xFF;
+        }
+
+        int newFlags = currentFlags & FLAG_N;
+        if (a == 0) newFlags |= FLAG_Z;
+        if (setCarry) newFlags |= FLAG_C;
+
+        soCData.broadcast(this, new ByteData(a));
+        return newFlags;
+    }
+
+    /**
+     * CPL -> Complement Accumulator.
+     * Inverte bitwise il registro A (NOT). Forza N=1 e H=1, preserva Z e C.
+     * Spedisce il risultato su SoCData.
+     */
+    public int cpl(int currentFlags) {
+        int a = regToAluBus1.sampleByte() & 0xFF;
+        int result = (~a) & 0xFF;
+        int preservedFlags = currentFlags & (FLAG_Z | FLAG_C);
+        int newFlags = preservedFlags | FLAG_N | FLAG_H;
+        soCData.broadcast(this, new ByteData(result));
+        return newFlags;
+    }
 }
