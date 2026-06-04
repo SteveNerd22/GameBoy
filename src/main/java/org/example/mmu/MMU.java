@@ -48,13 +48,8 @@ public class MMU implements BusReader<AddressData>, BusWriter {
         // Catturiamo l'indirizzo corrente fluttuante sul bus
         this.latchedAddress = data.getAddress() & 0xFFFF;
 
-        // SE LA CPU STA FACENDO UNA LETTURA:
-        // Nel ciclo hardware, non appena il PC si stabilizza sull'AddressBus,
-        // la MMU deve decodificare l'indirizzo e buttare IMMEDIATAMENTE il byte sul DataBus,
-        // così la CPU lo troverà pronto al ciclo di clock successivo per il campionamento.
         int byteRead = readPhysicalMemory(this.latchedAddress);
 
-        // Rispondiamo sul DataBus effettuando un broadcast a tutti (tranne noi stessi)
         this.dataBus.broadcast(this, new ByteData(byteRead));
     }
 

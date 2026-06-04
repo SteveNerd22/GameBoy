@@ -12,7 +12,6 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
 
     InterruptBus SoCInterrupts;
 
-    private int internalCycleCounter = 0;
     private boolean isHalting = false;
 
     private ExecutionEngine executionEngine;
@@ -40,8 +39,11 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
     }
 
     public void reset() {
-        internalCycleCounter = 0;
         isHalting = false;
         executionEngine.reset();
+    }
+
+    public long getTotalTicks() {
+        return executionEngine.getTotalTicks();
     }
 }

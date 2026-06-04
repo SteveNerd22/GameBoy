@@ -8,15 +8,17 @@ public final class Opcode_LdRegIndirectHl extends CpuInstruction {
 
     @Override
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
-        if (step == 0) {
-            cpu.HL.emit();
-            cpu.Z.sampleSoCBus();
+        switch (step) {
+            case 0:
+                cpu.HL.emit();
+                cpu.Z.sampleSoCBus();
+                return false;
 
-            Register destRegister = resolveDestRegister(opcode, cpu);
-            cpu.Z.emitToInternalData();
-            destRegister.sampleInternalData();
-
-            return true;
+            case 1:
+                Register destRegister = resolveDestRegister(opcode, cpu);
+                cpu.Z.emitToInternalData();
+                destRegister.sampleInternalData();
+                return true;
         }
 
         throw new IllegalStateException("Step non valido per LD r, (HL): " + step);

@@ -19,8 +19,8 @@ public final class Opcode_LdRegReg extends CpuInstruction {
         Register src = resolveSourceRegister(opcode, cpu);
         Register dest = resolveDestRegister(opcode, cpu);
 
-        src.emit();
-        dest.sampleSoCBus();
+        src.emitToInternalData();
+        dest.sampleInternalData();
 
         return true;
     }

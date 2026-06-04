@@ -5,8 +5,6 @@ import org.example.cpu.pipeline.ExecutionEngine;
 
 public class SM83 implements BusWriter {
 
-    private long totalTicks = 0;
-
     public final Register IR, IE;
     public final Register A, B, C, D, E, H, L;
     public final FlagsRegister F;
@@ -80,7 +78,6 @@ public class SM83 implements BusWriter {
      * Il SoC chiama questo metodo a ogni ciclo di clock (T-Cycle).
      */
     public void pulse() {
-        totalTicks++;
         controlUnit.pulse(this);
     }
 
@@ -88,19 +85,19 @@ public class SM83 implements BusWriter {
      * Restituisce i T-Cycles totali accumulati dall'accensione della CPU.
      */
     public long getTotalTicks() {
-        return this.totalTicks;
+        return controlUnit.getTotalTicks();
     }
 
     /**
      * Ripristina lo stato iniziale dei registri della CPU hardware.
      */
     public void reset() {
-        A.set(0x01);
-        F.set(0xB0);
-        BC.set(0x0013);
-        DE.set(0x00D8);
-        HL.set(0x014D);
-        SP.set(0xFFFE);
+        A.set(0x00);
+        F.set(0x00);
+        BC.set(0x0000);
+        DE.set(0x0000);
+        HL.set(0x0000);
+        SP.set(0x0000);
         PC.set(0x0000);
 
         IR.set(0x00);
@@ -108,15 +105,10 @@ public class SM83 implements BusWriter {
         W.set(0x00);
         Z.set(0x00);
 
-        this.totalTicks = 0;
-
         controlUnit.reset();
     }
 
-    /**
-     * Metodo di diagnostica per i test per sapere in che stato si trova la pipeline.
-     */
-    public String getPipelineStatus() {
-        return this.engine.getCurrentStage().toString();
+    public ExecutionEngine getExecutionEngine() {
+        return engine;
     }
 }

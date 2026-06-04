@@ -10,12 +10,16 @@ public final class Opcode_LdRegImmediate extends CpuInstruction {
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
         switch (step) {
             case 0 -> {
+                cpu.Z.sampleSoCBus();
                 cpu.PC.emit();
-
-                Register targetRegister = resolveDestRegister(opcode, cpu);
-                targetRegister.sampleSoCBus();
-                advanceProgramCounter(cpu);
-
+                cpu.idu.incrementFormSoC();
+                cpu.PC.sampleFromIduBus();
+                return false;
+            }
+            case 1 -> {
+                Register dest = resolveDestRegister(opcode, cpu);
+                cpu.Z.emitToInternalData();
+                dest.sampleInternalData();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per LD r, n: " + step);
