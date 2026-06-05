@@ -11,31 +11,28 @@ public final class Opcode_Push extends CpuInstruction {
         switch (step) {
             case 0 -> {
                 cpu.SP.emit();
-
                 cpu.idu.decrementFormSoC();
                 cpu.SP.sampleFromIduBus();
-
                 return false;
             }
             case 1 -> {
-                cpu.SP.emit();
-
                 RegisterPair sourcePair = resolveSourcePair(opcode, cpu);
-                sourcePair.getHigh().emitToInternalData();
                 sourcePair.getHigh().emit();
-
+                cpu.controlUnit.sendWriteSignal();
+                cpu.SP.emit();
                 cpu.idu.decrementFormSoC();
                 cpu.SP.sampleFromIduBus();
-
                 return false;
             }
             case 2 -> {
-                cpu.SP.emit();
-
                 RegisterPair sourcePair = resolveSourcePair(opcode, cpu);
-                sourcePair.getLow().emitToInternalData();
                 sourcePair.getLow().emit();
-
+                cpu.SP.emit();
+                return false;
+            }
+            case 3 -> {
+                cpu.controlUnit.sendReadSignal();
+                cpu.PC.emit();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per PUSH rr: " + step);

@@ -1,6 +1,7 @@
 package org.example.cpu;
 
 import org.example.bus.*;
+import org.example.bus.data.ByteData;
 import org.example.cpu.pipeline.ExecutionEngine;
 
 public class SM83 implements BusWriter {
@@ -24,6 +25,8 @@ public class SM83 implements BusWriter {
     public final DataBus SoCData;
     public final AddressBus SoCAddress;
 
+    private final DataBus aluBus2;
+
     private final ExecutionEngine engine;
 
     public SM83(InterruptBus SoCInterrupts, DataBus SoCData, AddressBus SoCAddress) {
@@ -38,7 +41,8 @@ public class SM83 implements BusWriter {
         // Linee di bus interne private del Core CPU
         AddressBus iduToAddressRegisters = new AddressBus();
         DataBus regToAluBus1 = new DataBus();
-        DataBus regToAluBus2 = new DataBus();
+        aluBus2 = new DataBus();
+        DataBus regToAluBus2 = aluBus2;
         DataBus regToRegBus =  new DataBus();
 
         IR = new Register(SoCData, null, null, regToRegBus);
@@ -61,11 +65,11 @@ public class SM83 implements BusWriter {
         L = HL.getLow();
 
         PC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
-        SP = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, null, regToAluBus2, regToRegBus, regToRegBus);
+        SP = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
 
         W = new Register(SoCData, null, regToAluBus2, regToRegBus);
         Z = new Register(SoCData, null, regToAluBus2, regToRegBus);
-        WZ = new RegisterPair(W, Z, SoCAddress, null);
+        WZ = new RegisterPair(W, Z, SoCAddress, iduToAddressRegisters);
 
         alu = new Alu(SoCData, regToAluBus1, regToAluBus2);
         idu = new Idu(SoCAddress, iduToAddressRegisters);
@@ -111,5 +115,9 @@ public class SM83 implements BusWriter {
 
     public ExecutionEngine getExecutionEngine() {
         return engine;
+    }
+
+    public void regToAlu2Emit(int value) {
+        aluBus2.broadcast(this, new ByteData(value));
     }
 }

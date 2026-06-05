@@ -11,25 +11,22 @@ public final class Opcode_Pop extends CpuInstruction {
         switch (step) {
             case 0 -> {
                 cpu.SP.emit();
-
                 cpu.Z.sampleSoCBus();
-
                 cpu.idu.incrementFormSoC();
                 cpu.SP.sampleFromIduBus();
-
                 return false;
             }
             case 1 -> {
                 cpu.SP.emit();
-
                 cpu.W.sampleSoCBus();
-
                 cpu.idu.incrementFormSoC();
                 cpu.SP.sampleFromIduBus();
-
+                return false;
+            }
+            case 2 -> {
                 RegisterPair targetPair = resolveTargetPair(opcode, cpu);
                 targetPair.set(cpu.WZ.get());
-
+                cpu.PC.emit();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per POP rr: " + step);

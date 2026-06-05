@@ -31,12 +31,20 @@ public class Idu implements BusWriter, BusReader<AddressData> {
         privateIduBus.broadcast(this, new AddressData(nextAddress));
     }
 
+    public void copy(int currentAddress) {
+        privateIduBus.broadcast(this, new AddressData(currentAddress));
+    }
+
     public void incrementFormSoC() {
         increment(SoCAddressBus.sampleAddress());
     }
 
     public void decrementFormSoC() {
         decrement(SoCAddressBus.sampleAddress());
+    }
+
+    public void copyFormSoC() {
+        copy(SoCAddressBus.sampleAddress());
     }
 
     @Override

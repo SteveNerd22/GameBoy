@@ -1,5 +1,6 @@
 package org.example.cpu;
 
+import org.example.Main;
 import org.example.bus.BusWriter;
 import org.example.bus.DataBus;
 import org.example.bus.data.ByteData;
@@ -39,6 +40,10 @@ public class Alu implements BusWriter {
         if (((op1 & 0x0F) + (op2 & 0x0F)) > 0x0F) newFlags |= FLAG_H;
         if ((op1 + op2) > 0xFF) newFlags |= FLAG_C;
 
+        if(Main.DEBUG)
+            System.out.printf("[ALU ADD] 0x%02X + 0x%02X = 0x%02X | Flags Generati: %s (Raw: 0x%02X)\n",
+                    op1, op2, result, getAluFlagsString(newFlags), newFlags);
+
         soCData.broadcast(this, new ByteData(result));
         return newFlags;
     }
@@ -56,6 +61,10 @@ public class Alu implements BusWriter {
         if (result == 0) newFlags |= FLAG_Z;
         if (((op1 & 0x0F) + (op2 & 0x0F) + cy) > 0x0F) newFlags |= FLAG_H;
         if ((op1 + op2 + cy) > 0xFF) newFlags |= FLAG_C;
+
+        if(Main.DEBUG)
+            System.out.printf("[ALU ADC] 0x%02X + 0x%02X +0x%02X = 0x%02X | Flags Generati: %s (Raw: 0x%02X)\n",
+                    op1, op2, cy, result, getAluFlagsString(newFlags), newFlags);
 
         soCData.broadcast(this, new ByteData(result));
         return newFlags;
@@ -257,5 +266,15 @@ public class Alu implements BusWriter {
         int newFlags = preservedFlags | FLAG_N | FLAG_H;
         soCData.broadcast(this, new ByteData(result));
         return newFlags;
+    }
+
+
+    private String getAluFlagsString(int f) {
+        return String.format("[%s%s%s%s]",
+                (f & FLAG_Z) != 0 ? "Z" : "-",
+                (f & FLAG_N) != 0 ? "N" : "-",
+                (f & FLAG_H) != 0 ? "H" : "-",
+                (f & FLAG_C) != 0 ? "C" : "-"
+        );
     }
 }
