@@ -10,13 +10,11 @@ public final class Opcode_CompareRegister8 extends CpuInstruction {
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
         if (step == 0) {
             cpu.A.emitToAluBus1();
-
             Register sourceReg = resolveSourceRegister(opcode, cpu);
             sourceReg.emitToAluBus2();
-
             int aluFlags = cpu.alu.sub(false);
             cpu.F.set(aluFlags);
-
+            cpu.PC.emit();
             return true;
         }
 
