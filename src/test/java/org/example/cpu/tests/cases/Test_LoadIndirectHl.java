@@ -70,7 +70,7 @@ public class Test_LoadIndirectHl implements CpuTestCase {
      * di questa specifica classe, includendo la visualizzazione accoppiata di HL.
      */
     @Override
-    public void printStateLine(int mCycle, SM83 cpu, ExecutionEngine engine) {
+    public void printStateLine(int mCycle, SM83 cpu, MMU mmu, ExecutionEngine engine) {
         String currentOpName = (engine.getCurrentInstruction() != null)
                 ? engine.getCurrentInstruction().getClass().getSimpleName()
                 : "None (Boot/Fetch)";

@@ -21,7 +21,7 @@ public class GameBoy {
         this.interruptBus = new InterruptBus();
 
         // 2. Inizializzazione della Memoria collegata ai Bus
-        this.mmu = new MMU(this.addressBus, this.dataBus);
+        this.mmu = new MMU(this.addressBus, this.dataBus, this.interruptBus);
 
         // 3. Inizializzazione della CPU (le passiamo i bus con l'ordine richiesto dal tuo costruttore)
         this.cpu = new SM83(this.interruptBus, this.dataBus, this.addressBus);

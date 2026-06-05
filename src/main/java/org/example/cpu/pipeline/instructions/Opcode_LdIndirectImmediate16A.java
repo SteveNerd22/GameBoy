@@ -12,19 +12,23 @@ public final class Opcode_LdIndirectImmediate16A extends CpuInstruction {
                 cpu.PC.emit();
                 cpu.Z.sampleSoCBus();
                 advanceProgramCounter(cpu);
-
                 return false;
             }
             case 1 -> {
                 cpu.PC.emit();
                 cpu.W.sampleSoCBus();
                 advanceProgramCounter(cpu);
-
-                cpu.WZ.emit();
-
-                cpu.A.emitToInternalData();
+                return false;
+            }
+            case 2 -> {
+                cpu.controlUnit.sendWriteSignal();
                 cpu.A.emit();
-
+                cpu.WZ.emit();
+                return false;
+            }
+            case 3 -> {
+                cpu.controlUnit.sendReadSignal();
+                cpu.PC.emit();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per LD (nn), A: " + step);

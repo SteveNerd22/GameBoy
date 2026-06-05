@@ -8,15 +8,18 @@ public final class Opcode_LdAIndirectBcDe extends CpuInstruction {
 
     @Override
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
-        if (step == 0) {
-            RegisterPair sourcePair = resolveSourcePair(opcode, cpu);
-            sourcePair.emit();
-            cpu.Z.sampleSoCBus();
-
-            cpu.Z.emitToInternalData();
-            cpu.A.sampleInternalData();
-
-            return true;
+        switch (step) {
+            case 0 -> {
+                RegisterPair sourcePair = resolveSourcePair(opcode, cpu);
+                sourcePair.emit();
+                cpu.Z.sampleSoCBus();
+                return false;
+            }
+            case 1 -> {
+                cpu.Z.emitToInternalData();
+                cpu.A.sampleInternalData();
+                return true;
+            }
         }
 
         throw new IllegalStateException("Step non valido per LD A, (BC/DE): " + step);

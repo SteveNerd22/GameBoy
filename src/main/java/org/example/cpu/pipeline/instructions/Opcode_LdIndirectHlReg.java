@@ -10,10 +10,14 @@ public final class Opcode_LdIndirectHlReg extends CpuInstruction {
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
         switch (step) {
             case 0 -> {
-                cpu.HL.emit();
                 Register sourceRegister = resolveSourceRegister(opcode, cpu);
-
                 sourceRegister.emit();
+                cpu.controlUnit.sendWriteSignal();
+                cpu.HL.emit();
+                return false;
+            }
+            case 1 -> {
+                cpu.controlUnit.sendReadSignal();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per LD (HL), r: " + step);

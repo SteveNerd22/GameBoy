@@ -1,6 +1,7 @@
 package org.example.cpu.tests;
 
 import org.example.GameBoy;
+import org.example.Main;
 import org.example.cpu.SM83;
 import org.example.cpu.TestReporter;
 import org.example.cpu.pipeline.ExecutionEngine;
@@ -26,9 +27,12 @@ public interface CpuTestCase {
         System.out.println("   STANDALONE PIPELINE TRACE: " + getName().toUpperCase());
         System.out.println("=======================================================================================");
 
+        Main.DEBUG = false;
+
         // Istanziamo la scheda madre completa
         GameBoy gb = new GameBoy();
         SM83 cpu = gb.getCpu();
+        MMU mmu = gb.getMmu();
 
         // Caricamento della ROM tramite la MMU del GameBoy
         int[] fakeCartridge = new int[0x4000];
@@ -45,14 +49,14 @@ public interface CpuTestCase {
         }
 
         System.out.println("Stato iniziale (Boot - Catena Vuota):");
-        printStateLine(0, cpu, cpu.getExecutionEngine());
+        printStateLine(0, cpu, mmu, cpu.getExecutionEngine());
         System.out.println("---------------------------------------------------------------------------------------");
 
         for (int mCycle = 1; mCycle <= targetMCycles; mCycle++) {
             for (int tick = 0; tick < 4; tick++) {
                 gb.pulse(); // Facciamo fare il pulse direttamente al sistema
             }
-            printStateLine(mCycle, cpu, cpu.getExecutionEngine());
+            printStateLine(mCycle, cpu, mmu, cpu.getExecutionEngine());
         }
 
         System.out.println("---------------------------------------------------------------------------------------");
@@ -63,7 +67,7 @@ public interface CpuTestCase {
     /**
      * METODO DEFAULT INTERNO: Formatta e stampa i registri hardware e lo stato dell'Engine.
      */
-    default void printStateLine(int mCycle, SM83 cpu, ExecutionEngine engine) {
+    default void printStateLine(int mCycle, SM83 cpu, MMU mmu, ExecutionEngine engine) {
         String currentOpName = (engine.getCurrentInstruction() != null)
                 ? engine.getCurrentInstruction().getClass().getSimpleName()
                 : "None (Boot/Fetch)";

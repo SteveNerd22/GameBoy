@@ -1,13 +1,12 @@
 package org.example.mmu;
 
-import org.example.bus.AddressBus;
-import org.example.bus.BusReader;
-import org.example.bus.BusWriter;
+import org.example.bus.*;
 import org.example.bus.data.AddressData;
-import org.example.bus.DataBus;
+import org.example.bus.data.BusData;
 import org.example.bus.data.ByteData;
+import org.example.bus.data.InterruptSignal;
 
-public class MMU implements BusReader<AddressData>, BusWriter {
+public class MMU implements BusWriter {
 
     // Memoria fisica interna (struttura Enum precedente)
     private final int[] vram = new int[MemoryRegion.VRAM.getEnd() - MemoryRegion.VRAM.getStart() + 1];
@@ -22,35 +21,41 @@ public class MMU implements BusReader<AddressData>, BusWriter {
     // Riferimenti ai Bus per campionamento attivo o risposte immediate
     private final AddressBus addressBus;
     private final DataBus dataBus;
+    private final InterruptBus interruptBus;
+    private int currentControlSignal = InterruptSignal.NONE;
 
     // Stato interno temporaneo: l'ultimo indirizzo apparso sulle piste del bus
     private int latchedAddress = 0x0000;
 
-    public MMU(AddressBus addressBus, DataBus dataBus) {
+    public MMU(AddressBus addressBus, DataBus dataBus, InterruptBus interruptBus) {
         this.addressBus = addressBus;
         this.dataBus = dataBus;
+        this.interruptBus = interruptBus;
 
-        // La MMU si registra come ascoltatrice passiva dei fronti d'onda dell'AddressBus
-        this.addressBus.registerReader(this);
-        // La MMU si registra anche come scrittrice autorizzata sul DataBus
+        this.interruptBus.registerReader((_, signal) -> this.currentControlSignal = signal.getBitMask());
+
+        this.addressBus.registerReader((_, data) -> {
+            this.latchedAddress = data.getAddress() & 0xFFFF;
+            executeMemoryAccess();
+        });
+
         this.dataBus.registerWriter(this);
+    }
+
+    private void executeMemoryAccess() {
+        if ((this.currentControlSignal & InterruptSignal.MEM_RD) != 0) {
+            int byteRead = readPhysicalMemory(this.latchedAddress);
+            this.dataBus.broadcast(this, new ByteData(byteRead));
+        }
+
+        else if ((this.currentControlSignal & InterruptSignal.MEM_WR) != 0) {
+            int valueToWrite = this.dataBus.sampleByte();
+            writePhysicalMemory(this.latchedAddress, valueToWrite);
+        }
     }
 
     public void loadCartridge(int[] romData) {
         this.cartridgeRom = romData;
-    }
-
-    /**
-     * CALLBACK PASSIVA: Qualcuno (la CPU) ha sparato un indirizzo sull'AddressBus.
-     */
-    @Override
-    public void onBusWrite(BusWriter sender, AddressData data) {
-        // Catturiamo l'indirizzo corrente fluttuante sul bus
-        this.latchedAddress = data.getAddress() & 0xFFFF;
-
-        int byteRead = readPhysicalMemory(this.latchedAddress);
-
-        this.dataBus.broadcast(this, new ByteData(byteRead));
     }
 
     /**

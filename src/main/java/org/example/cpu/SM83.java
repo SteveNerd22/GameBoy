@@ -33,6 +33,7 @@ public class SM83 implements BusWriter {
 
         engine = new ExecutionEngine();
         controlUnit = new ControlUnit(SoCInterrupts, engine);
+        controlUnit.sendReadSignal();
 
         // Linee di bus interne private del Core CPU
         AddressBus iduToAddressRegisters = new AddressBus();

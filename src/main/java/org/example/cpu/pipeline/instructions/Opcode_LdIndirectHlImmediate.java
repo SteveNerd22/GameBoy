@@ -11,13 +11,18 @@ public final class Opcode_LdIndirectHlImmediate extends CpuInstruction {
             case 0 -> {
                 cpu.PC.emit();
                 cpu.Z.sampleSoCBus();
-
                 advanceProgramCounter(cpu);
                 return false;
             }
             case 1 -> {
-                cpu.HL.emit();
                 cpu.Z.emit();
+                cpu.controlUnit.sendWriteSignal();
+                cpu.HL.emit();
+                return false;
+            }
+            case 2 -> {
+                cpu.controlUnit.sendReadSignal();
+                cpu.PC.emit();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per LD (HL), n: " + step);
