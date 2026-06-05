@@ -8,15 +8,20 @@ public final class Opcode_LdhIndirectCA extends CpuInstruction {
 
     @Override
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
-        if (step == 0) {
-            cpu.C.emitToInternalData();
-
-            int combinedAddress = (0xFF << 8) | (cpu.C.sampleInternalData() & 0xFF);
-            cpu.SoCAddress.broadcast(cpu.C, new AddressData(combinedAddress));
-
-            cpu.A.emit();
-
-            return true;
+        switch (step) {
+            case 0 -> {
+                cpu.A.emit();
+                cpu.C.emitToInternalData();
+                int combinedAddress = (0xFF << 8) | (cpu.C.sampleInternalData() & 0xFF);
+                cpu.controlUnit.sendWriteSignal();
+                cpu.SoCAddress.broadcast(cpu.C, new AddressData(combinedAddress));
+                return false;
+            }
+            case 1 -> {
+                cpu.controlUnit.sendReadSignal();
+                cpu.PC.emit();
+                return true;
+            }
         }
 
         throw new IllegalStateException("Step non valido per LDH (C), A: " + step);

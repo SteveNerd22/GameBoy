@@ -13,21 +13,22 @@ public final class Opcode_LdhIndirectImmediate8A extends CpuInstruction {
                 cpu.PC.emit();
                 cpu.Z.sampleSoCBus();
                 advanceProgramCounter(cpu);
-
                 return false;
             }
             case 1 -> {
                 cpu.Z.emitToInternalData();
-
                 int combinedAddress = (0xFF << 8) | (cpu.Z.sampleInternalData() & 0xFF);
-
-                cpu.SoCAddress.broadcast(cpu.Z, new AddressData(combinedAddress));
-
                 cpu.A.emit();
-
+                cpu.controlUnit.sendWriteSignal();
+                cpu.SoCAddress.broadcast(cpu.Z, new AddressData(combinedAddress));
+                return false;
+            }
+            case 2 -> {
+                cpu.controlUnit.sendReadSignal();
+                cpu.PC.emit();
                 return true;
             }
-            default -> throw new IllegalStateException("Step non valido per LDH (n), A: " + step);
+            default -> throw new IllegalStateException("Step non valido per LDH A, (n): " + step);
         }
     }
 }
