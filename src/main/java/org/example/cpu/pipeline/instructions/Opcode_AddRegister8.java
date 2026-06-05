@@ -13,18 +13,14 @@ public final class Opcode_AddRegister8 extends CpuInstruction {
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
         if (step == 0) {
             cpu.A.emitToAluBus1();
-
             Register sourceReg = resolveSourceRegister(opcode, cpu);
             sourceReg.emitToAluBus2();
-
             boolean isAdc = (opcode & 0x08) != 0;
             boolean carryIn = isAdc && cpu.F.isCarrySet();
-
             int aluFlags = cpu.alu.adc(carryIn);
-
             cpu.A.sampleSoCBus();
             cpu.F.set(aluFlags);
-
+            cpu.PC.emit();
             return true;
         }
 
