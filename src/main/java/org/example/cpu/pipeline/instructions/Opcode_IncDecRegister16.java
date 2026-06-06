@@ -13,20 +13,23 @@ public final class Opcode_IncDecRegister16 extends CpuInstruction {
 
     @Override
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
-        if (step == 0) {
-            RegisterPair targetReg = resolveRegisterPair(opcode, cpu);
-            targetReg.emit();
-
-            boolean isDec = (opcode & 0x08) != 0;
-            if (isDec) {
-                cpu.idu.decrementFormSoC();
-            } else {
-                cpu.idu.incrementFormSoC();
+        switch (step) {
+            case 0 -> {
+                RegisterPair targetReg = resolveRegisterPair(opcode, cpu);
+                targetReg.emit();
+                boolean isDec = (opcode & 0x08) != 0;
+                if (isDec) {
+                    cpu.idu.decrementFormSoC();
+                } else {
+                    cpu.idu.incrementFormSoC();
+                }
+                targetReg.sampleFromIduBus();
+                return false;
             }
-
-            targetReg.sampleFromIduBus();
-
-            return true;
+            case 1 -> {
+                cpu.PC.emit();
+                return true;
+            }
         }
 
         throw new IllegalStateException("Step non valido per INC/DEC rr: " + step);
