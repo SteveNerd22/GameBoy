@@ -23,7 +23,7 @@ public final class Opcode_CcfScf extends CpuInstruction {
             }
 
             cpu.F.set(aluFlags);
-
+            cpu.PC.emit();
             return true;
         }
 

@@ -13,7 +13,7 @@ public final class Opcode_Cpl extends CpuInstruction {
             int aluFlags = cpu.alu.cpl(currentFlags);
             cpu.A.sampleSoCBus();
             cpu.F.set(aluFlags);
-
+            cpu.PC.emit();
             return true;
         }
 

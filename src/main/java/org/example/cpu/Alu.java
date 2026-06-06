@@ -191,13 +191,15 @@ public class Alu implements BusWriter {
 
     /**
      * CCF -> Complement Carry Flag.
-     * Inverte il bit del Carry, azzera N e H, preserva Z.
+     * Inverte il bit del Carry, azzera N,
+     * copia il VECCHIO Carry in H, e preserva Z.
      */
     public int ccf(int currentFlags) {
         int newFlags = currentFlags & FLAG_Z;
         int oldCarry = currentFlags & FLAG_C;
         int invertedCarry = oldCarry ^ FLAG_C;
-        return newFlags | invertedCarry;
+        int oldCarryMovedToH = oldCarry << 1;
+        return newFlags | invertedCarry | oldCarryMovedToH;
     }
 
     /**
