@@ -1,6 +1,7 @@
 package org.example.cpu;
 
 import org.example.bus.*;
+import org.example.bus.data.AddressData;
 import org.example.bus.data.ByteData;
 import org.example.cpu.pipeline.ExecutionEngine;
 
@@ -64,7 +65,7 @@ public class SM83 implements BusWriter {
         H = HL.getHigh();
         L = HL.getLow();
 
-        PC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters);
+        PC = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
         SP = new RegisterPair(SoCData, SoCAddress, iduToAddressRegisters, regToAluBus1, regToAluBus2, regToRegBus, regToRegBus);
 
         W = new Register(SoCData, regToAluBus1, regToAluBus2, regToRegBus);
@@ -119,5 +120,9 @@ public class SM83 implements BusWriter {
 
     public void regToAlu2Emit(int value) {
         aluBus2.broadcast(this, new ByteData(value));
+    }
+
+    public void emitHighPCHOnAddressBus() {
+        this.SoCAddress.broadcast(this, new AddressData(PC.getHigh().get() << 8));
     }
 }

@@ -279,4 +279,27 @@ public class Alu implements BusWriter {
                 (f & FLAG_C) != 0 ? "C" : "-"
         );
     }
+    public int cpb() {
+        int val1 = regToAluBus1.sampleByte() & 0xFF;
+        int val2 = regToAluBus2.sampleByte() & 0xFF;
+        int fullSum = val1 + val2;
+        int lowNibbleSum = (val1 & 0x0F) + (val2 & 0x0F);
+        int lastResult8Bit = fullSum & 0xFF;
+
+        this.soCData.broadcast(this, new ByteData(lastResult8Bit));
+        int flags = 0;
+        if (lastResult8Bit == 0) {
+            flags |= FLAG_Z;
+        }
+        if (lowNibbleSum > 0x0F) {
+            flags |= FLAG_H;
+        }
+        if (fullSum > 0xFF) {
+            flags |= FLAG_C;
+        }
+        if(Main.DEBUG)
+            System.out.printf("[ALU CPB] 0x%02X + 0x%02X = 0x%02X | Flags Generati: %s (Raw: 0x%02X)\n", val1, val2, lastResult8Bit, getAluFlagsString(flags), flags);
+
+        return flags;
+    }
 }

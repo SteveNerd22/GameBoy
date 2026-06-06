@@ -27,7 +27,7 @@ public interface CpuTestCase {
         System.out.println("   STANDALONE PIPELINE TRACE: " + getName().toUpperCase());
         System.out.println("=======================================================================================");
 
-        Main.DEBUG = false;
+        Main.DEBUG = true;
 
         // Istanziamo la scheda madre completa
         GameBoy gb = new GameBoy();
