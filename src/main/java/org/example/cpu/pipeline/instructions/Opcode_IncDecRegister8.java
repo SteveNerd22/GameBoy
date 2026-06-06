@@ -18,21 +18,18 @@ public final class Opcode_IncDecRegister8 extends CpuInstruction {
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
         if (step == 0) {
             Register targetReg = resolveDestRegister(opcode, cpu);
-
             targetReg.emitToAluBus1();
             int currentFlags = cpu.F.get();
             int aluFlags;
             boolean isDec = (opcode & 0x01) != 0;
-
             if (isDec) {
                 aluFlags = cpu.alu.dec(currentFlags);
             } else {
                 aluFlags = cpu.alu.inc(currentFlags);
             }
-
             targetReg.sampleSoCBus();
+            cpu.PC.emit();
             cpu.F.set(aluFlags);
-
             return true;
         }
 
