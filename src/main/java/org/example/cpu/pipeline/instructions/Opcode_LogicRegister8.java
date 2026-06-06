@@ -27,7 +27,7 @@ public final class Opcode_LogicRegister8 extends CpuInstruction {
 
             cpu.A.sampleSoCBus();
             cpu.F.set(aluFlags);
-
+            cpu.PC.emit();
             return true;
         }
 
