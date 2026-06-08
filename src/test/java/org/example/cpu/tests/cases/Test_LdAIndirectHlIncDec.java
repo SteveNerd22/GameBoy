@@ -23,8 +23,8 @@ public class Test_LdAIndirectHlIncDec implements CpuTestCase {
             gb.getCpu().A.set(0x00);
 
             // Prepariamo due celle di RAM consecutive con valori differenti
-            gb.getMmu().writeByte(0xC080, 0x11); // Primo valore da leggere (per HL+)
-            gb.getMmu().writeByte(0xC081, 0x99); // Secondo valore da leggere (per HL-)
+            gb.getMmu().writeByte(0xC080, 0x11, gb.getCpu()); // Primo valore da leggere (per HL+)
+            gb.getMmu().writeByte(0xC081, 0x99, gb.getCpu()); // Secondo valore da leggere (per HL-)
         });
     }
 
@@ -33,7 +33,7 @@ public class Test_LdAIndirectHlIncDec implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico (testiamo il comportamento di 0x2A)
         int[] rom = { 0x2A, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xC080, 0x11);
+        mmu.writeByte(0xC080, 0x11, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -72,7 +72,7 @@ public class Test_LdAIndirectHlIncDec implements CpuTestCase {
                 : "None (Boot/Fetch)";
 
         int currentHl = cpu.HL.get();
-        int ramSample = mmu.readByte(currentHl);
+        int ramSample = mmu.readByte(currentHl, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-25s | HL: 0x%04X | RAM[HL]: 0x%02X | Z(WZ): 0x%02X | A: 0x%02X | Ticks: %d\n",

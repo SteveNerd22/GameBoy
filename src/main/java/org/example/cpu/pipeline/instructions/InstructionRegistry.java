@@ -2,9 +2,6 @@ package org.example.cpu.pipeline.instructions;
 
 import org.example.Main;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class InstructionRegistry {
 
     private static final CpuInstruction[] baseInstructions = new CpuInstruction[256];
@@ -96,7 +93,8 @@ public class InstructionRegistry {
         return report.toString();
     }
 
-    public static CpuInstruction get(int opcode) {
+    public static CpuInstruction get(int opcode, boolean isCBSet) {
+        if(isCBSet) return cbInstructions[opcode &  0xFF];
         return baseInstructions[opcode & 0xFF];
     }
 

@@ -43,3 +43,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 /PokemonRed.gb
+/cpu_instrs.gb
+/06-ld r,r.gb

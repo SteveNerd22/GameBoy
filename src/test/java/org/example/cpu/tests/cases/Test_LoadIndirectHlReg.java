@@ -50,7 +50,7 @@ public class Test_LoadIndirectHlReg implements CpuTestCase {
 
         // --- ASSERZIONE SULLA RAM ---
         // Verifichiamo se l'hardware ha effettivamente scritto il valore di B all'indirizzo contenuto in HL
-        int valInRam = mmu.readByte(0xC000);
+        int valInRam = mmu.readByte(0xC000, cpu);
 
         reporter.incrementAssertions();
         if (valInRam != 0xAA) {
@@ -70,7 +70,7 @@ public class Test_LoadIndirectHlReg implements CpuTestCase {
                 : "None (Boot/Fetch)";
 
         // Leggiamo al volo l'indirizzo 0xC000 per stamparlo in tempo reale nella tabella
-        int ramSample = mmu.readByte(0xC000);
+        int ramSample = mmu.readByte(0xC000, cpu);
         // Nota: se cpu non ha getMmu(), nel main del test puoi recuperarlo iniettandolo temporaneamente,
         // oppure stampare solo i registri. Se hai dubbi lascia 0x00 o passa l'istanza.
 

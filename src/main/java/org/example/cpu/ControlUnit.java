@@ -11,6 +11,7 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
     private final InterruptBus SoCInterrupts;
     private final ExecutionEngine executionEngine;
     private boolean isHalting = false;
+    private boolean isCBPrefix = false;
 
     // PRE-ALLOCAZIONE DEI SEGNALI: Evita di fare "new" a ogni M-Cycle sul bus
     private final InterruptSignal readSignal = new InterruptSignal(InterruptSignal.MEM_RD);
@@ -50,7 +51,7 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
 
     public void pulse(SM83 sm83) {
         // Il pulse passa la CPU all'ExecutionEngine per eseguire lo step dell'opcode corrente
-        executionEngine.pulse(sm83);
+        executionEngine.pulse(sm83, this.isCBPrefix);
     }
 
     private void handleInterruptRoutine(SM83 cpu, int interruptMask) {
@@ -64,6 +65,7 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
 
     public void reset() {
         isHalting = false;
+        isCBPrefix = false;
         sendReadSignal();
         executionEngine.reset();
     }
@@ -71,4 +73,21 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
     public long getTotalTicks() {
         return executionEngine.getTotalTicks();
     }
+
+    public void enableInterrupt() {
+        // TODO: aggiungere supporto per interrupt
+    }
+
+    public void disableInterrupt() {
+        // TODO: aggiungere supporto per interrupt
+    }
+
+    public void resetCBPrefix() {
+        isCBPrefix = false;
+    }
+
+    public void setCBPrefix() {
+        this.isCBPrefix = true;
+    }
+
 }

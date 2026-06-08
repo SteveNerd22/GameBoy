@@ -24,8 +24,8 @@ public class Test_IncDecIndirectHl implements CpuTestCase {
             cpu.HL.set(0xC000);
 
             // Scriviamo i valori iniziali nelle celle di memoria
-            mmu.writeByte(0xC000, 0x0F); // Per il test dell'INC (Half-Carry)
-            mmu.writeByte(0xC001, 0x01); // Per il test del DEC (Zero Flag)
+            mmu.writeByte(0xC000, 0x0F, cpu); // Per il test dell'INC (Half-Carry)
+            mmu.writeByte(0xC001, 0x01, cpu); // Per il test del DEC (Zero Flag)
 
             // Accendiamo il Carry artificialmente per essere certi che non venga toccato
             cpu.F.set(FlagsRegister.MASK_C);
@@ -40,14 +40,14 @@ public class Test_IncDecIndirectHl implements CpuTestCase {
         cpu.reset();
         cpu.PC.set(0x0000);
         cpu.HL.set(0xC000);
-        mmu.writeByte(0xC000, 0x0F);
-        mmu.writeByte(0xC001, 0x01);
+        mmu.writeByte(0xC000, 0x0F, cpu);
+        mmu.writeByte(0xC001, 0x01, cpu);
         cpu.F.set(FlagsRegister.MASK_C); // C=1 iniziale
 
         // --- Passo 1: INC (HL) -> 3 M-Cycles = 12 T-Ticks ---
         for (int i = 0; i < 12; i++) cpu.pulse();
 
-        int val1 = mmu.readByte(0xC000);
+        int val1 = mmu.readByte(0xC000, cpu);
         reporter.incrementAssertions();
         if (val1 != 0x10) {
             reporter.reportFailure(0x34, String.format("INC (HL) fallito in RAM: RAM[0xC000] è 0x%02X, atteso 0x10", val1));
@@ -66,7 +66,7 @@ public class Test_IncDecIndirectHl implements CpuTestCase {
         // --- Passo 2: DEC (HL) -> Altri 3 M-Cycles = 12 T-Ticks ---
         for (int i = 0; i < 12; i++) cpu.pulse();
 
-        int val2 = mmu.readByte(0xC001);
+        int val2 = mmu.readByte(0xC001, cpu);
         reporter.incrementAssertions();
         if (val2 != 0x00) {
             reporter.reportFailure(0x35, String.format("DEC (HL) fallito in RAM: RAM[0xC001] è 0x%02X, atteso 0x00", val2));
@@ -87,7 +87,7 @@ public class Test_IncDecIndirectHl implements CpuTestCase {
                 : "None (Fetch/Overlap)";
 
         int currentHl = cpu.HL.get();
-        int ramVal = (currentHl >= 0xC000 && currentHl <= 0xC001) ? mmu.readByte(currentHl) : 0x00;
+        int ramVal = (currentHl >= 0xC000 && currentHl <= 0xC001) ? mmu.readByte(currentHl, cpu) : 0x00;
 
         System.out.printf(
                 "M-Cycle: %-2d | PC: 0x%04X | IR: 0x%02X | Active Op: %-22s | HL: 0x%04X | RAM[HL]: 0x%02X | Flags: %s | Ticks: %d\n",

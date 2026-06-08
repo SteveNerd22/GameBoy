@@ -23,7 +23,7 @@ public class Test_LdhIndirectImmediate8A implements CpuTestCase {
             gb.getCpu().Z.set(0x00);
 
             // Resettiamo la cella di destinazione in HRAM
-            gb.getMmu().writeByte(0xFF8C, 0x00);
+            gb.getMmu().writeByte(0xFF8C, 0x00, gb.getCpu());
         });
     }
 
@@ -32,7 +32,7 @@ public class Test_LdhIndirectImmediate8A implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0xE0, 0x8C, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xFF8C, 0x00);
+        mmu.writeByte(0xFF8C, 0x00, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -44,7 +44,7 @@ public class Test_LdhIndirectImmediate8A implements CpuTestCase {
         }
 
         // --- ASSERZIONE SULLA RAM ---
-        int valInRam = mmu.readByte(0xFF8C);
+        int valInRam = mmu.readByte(0xFF8C, cpu);
 
         reporter.incrementAssertions();
         if (valInRam != 0xA5) {
@@ -64,7 +64,7 @@ public class Test_LdhIndirectImmediate8A implements CpuTestCase {
                 : "None (Boot/Fetch)";
 
         // Monitoraggio live della cella target finale in HRAM (0xFF8C)
-        int ramSample = mmu.readByte(0xFF8C);
+        int ramSample = mmu.readByte(0xFF8C, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-28s | WZ(Internal): 0x%02X%02X | A: 0x%02X | RAM[0xFF8C]: 0x%02X | Ticks: %d\n",

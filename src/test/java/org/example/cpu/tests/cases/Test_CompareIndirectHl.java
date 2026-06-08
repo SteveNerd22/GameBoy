@@ -24,8 +24,8 @@ public class Test_CompareIndirectHl implements CpuTestCase {
             cpu.HL.set(0xC000);
 
             // Carichiamo i valori nella RAM simulata
-            mmu.writeByte(0xC000, 0x45); // Identico ad A
-            mmu.writeByte(0xC001, 0x50); // Maggiore di A (genera Carry)
+            mmu.writeByte(0xC000, 0x45, cpu); // Identico ad A
+            mmu.writeByte(0xC001, 0x50, cpu); // Maggiore di A (genera Carry)
 
             // Setup dell'accumulatore
             cpu.A.set(0x45);
@@ -41,8 +41,8 @@ public class Test_CompareIndirectHl implements CpuTestCase {
         cpu.reset();
         cpu.PC.set(0x0000);
         cpu.HL.set(0xC000);
-        mmu.writeByte(0xC000, 0x45);
-        mmu.writeByte(0xC001, 0x50);
+        mmu.writeByte(0xC000, 0x45, cpu);
+        mmu.writeByte(0xC001, 0x50, cpu);
         cpu.A.set(0x45);
         cpu.F.set(0x00);
 
@@ -89,7 +89,7 @@ public class Test_CompareIndirectHl implements CpuTestCase {
                 : "None (Fetch/Overlap)";
 
         int currentHlAddr = cpu.HL.get();
-        int ramValue = mmu.readByte(currentHlAddr);
+        int ramValue = mmu.readByte(currentHlAddr, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-20s | HL(Addr): 0x%04X | RAM[HL]: 0x%02X | A: 0x%02X | Flags: %s | Ticks: %d\n",

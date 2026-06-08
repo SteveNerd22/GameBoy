@@ -24,8 +24,8 @@ public class Test_AddIndirectHl implements CpuTestCase {
             cpu.HL.set(0xC000);
 
             // Scriviamo i dati dentro la RAM simulata nelle due celle consecutive
-            mmu.writeByte(0xC000, 0x01); // Valore per ADD
-            mmu.writeByte(0xC001, 0x05); // Valore per ADC
+            mmu.writeByte(0xC000, 0x01, cpu); // Valore per ADD
+            mmu.writeByte(0xC001, 0x05, cpu); // Valore per ADC
 
             // Setup dell'accumulatore A e azzeramento Flag
             cpu.A.set(0xFF);
@@ -43,8 +43,8 @@ public class Test_AddIndirectHl implements CpuTestCase {
 
         // Setup ambiente
         cpu.HL.set(0xC000);
-        mmu.writeByte(0xC000, 0x01);
-        mmu.writeByte(0xC001, 0x05);
+        mmu.writeByte(0xC000, 0x01, cpu);
+        mmu.writeByte(0xC001, 0x05, cpu);
         cpu.A.set(0xFF);
         cpu.F.set(0x00);
 
@@ -91,7 +91,7 @@ public class Test_AddIndirectHl implements CpuTestCase {
 
         // Leggiamo dinamicamente il valore puntato da HL per visualizzarlo nel log
         int currentHlAddr = cpu.HL.get();
-        int ramValue = mmu.readByte(currentHlAddr);
+        int ramValue = mmu.readByte(currentHlAddr, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-20s | HL(Addr): 0x%04X | RAM[HL]: 0x%02X | A: 0x%02X | Flags: %s | Ticks: %d\n",

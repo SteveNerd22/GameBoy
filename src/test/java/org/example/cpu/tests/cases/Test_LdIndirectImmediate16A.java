@@ -21,7 +21,7 @@ public class Test_LdIndirectImmediate16A implements CpuTestCase {
             gb.getCpu().Z.set(0x00);
 
             // Inizializziamo la RAM di destinazione a 0x00 per verificare il cambiamento
-            gb.getMmu().writeByte(0xC300, 0x00);
+            gb.getMmu().writeByte(0xC300, 0x00, gb.getCpu());
         });
     }
 
@@ -30,7 +30,7 @@ public class Test_LdIndirectImmediate16A implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0xEA, 0x00, 0xC3, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xC300, 0x00);
+        mmu.writeByte(0xC300, 0x00, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -42,7 +42,7 @@ public class Test_LdIndirectImmediate16A implements CpuTestCase {
         }
 
         // --- ASSERZIONE SULLA RAM ---
-        int valInRam = mmu.readByte(0xC300);
+        int valInRam = mmu.readByte(0xC300, cpu);
 
         reporter.incrementAssertions();
         if (valInRam != 0xBE) {
@@ -62,7 +62,7 @@ public class Test_LdIndirectImmediate16A implements CpuTestCase {
                 : "None (Boot/Fetch)";
 
         // Monitoraggio live della cella RAM di destinazione
-        int ramSample = mmu.readByte(0xC300);
+        int ramSample = mmu.readByte(0xC300, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-26s | W: 0x%02X | Z: 0x%02X | A: 0x%02X | RAM[0xC300]: 0x%02X | Ticks: %d\n",

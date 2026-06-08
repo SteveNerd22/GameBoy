@@ -25,7 +25,7 @@ public class Test_LdIndirectBcDeA implements CpuTestCase {
             gb.getCpu().E.set(0x00);
 
             // Ci assicuriamo che la destinazione sia inizialmente vuota
-            gb.getMmu().writeByte(0xC100, 0x00);
+            gb.getMmu().writeByte(0xC100, 0x00, gb.getCpu());
         });
     }
 
@@ -34,7 +34,7 @@ public class Test_LdIndirectBcDeA implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0x12, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xC100, 0x00);
+        mmu.writeByte(0xC100, 0x00, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -48,7 +48,7 @@ public class Test_LdIndirectBcDeA implements CpuTestCase {
         }
 
         // --- ASSERZIONE SULLA RAM ---
-        int valInRam = mmu.readByte(0xC100);
+        int valInRam = mmu.readByte(0xC100, cpu);
 
         reporter.incrementAssertions();
         if (valInRam != 0x55) {
@@ -69,7 +69,7 @@ public class Test_LdIndirectBcDeA implements CpuTestCase {
 
         // Calcoliamo l'indirizzo puntato da DE per il campionamento live della RAM
         int targetAddress = (cpu.D.get() << 8) | cpu.E.get();
-        int ramSample = mmu.readByte(targetAddress);
+        int ramSample = mmu.readByte(targetAddress, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-22s | DE: 0x%04X | A: 0x%02X | Z(WZ): 0x%02X | RAM[0x%04X]: 0x%02X | Ticks: %d\n",

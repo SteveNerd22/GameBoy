@@ -23,7 +23,7 @@ public class Test_LoadIndirectHl implements CpuTestCase {
         new Test_LoadIndirectHl().runAsPipelineTrace(rom, 9, gameBoy -> {
             SM83 cpu = gameBoy.getCpu();
 
-            gameBoy.getMmu().writeByte(0xC000, 0x55);
+            gameBoy.getMmu().writeByte(0xC000, 0x55, cpu);
 
             // Azzeriamo i registri coinvolti per garantire un test pulito
             cpu.B.set(0x00);
@@ -43,7 +43,7 @@ public class Test_LoadIndirectHl implements CpuTestCase {
                 0x48
         };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xC000, 0x55);
+        mmu.writeByte(0xC000, 0x55, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);

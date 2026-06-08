@@ -24,8 +24,8 @@ public class Test_SubIndirectHl implements CpuTestCase {
             cpu.HL.set(0xC000);
 
             // Scriviamo i valori di test nelle celle di memoria puntate
-            mmu.writeByte(0xC000, 0x01); // Valore per SUB (0x00 - 0x01 = 0xFF)
-            mmu.writeByte(0xC001, 0xFE); // Valore per SBC (0xFF - 0xFE - 1 = 0x00)
+            mmu.writeByte(0xC000, 0x01, cpu); // Valore per SUB (0x00 - 0x01 = 0xFF)
+            mmu.writeByte(0xC001, 0xFE, cpu); // Valore per SBC (0xFF - 0xFE - 1 = 0x00)
 
             // Setup iniziale dei registri
             cpu.A.set(0x00);
@@ -42,8 +42,8 @@ public class Test_SubIndirectHl implements CpuTestCase {
         cpu.PC.set(0x0000);
 
         cpu.HL.set(0xC000);
-        mmu.writeByte(0xC000, 0x01);
-        mmu.writeByte(0xC001, 0xFE);
+        mmu.writeByte(0xC000, 0x01, cpu);
+        mmu.writeByte(0xC001, 0xFE, cpu);
         cpu.A.set(0x00);
         cpu.F.set(0x00);
 
@@ -90,7 +90,7 @@ public class Test_SubIndirectHl implements CpuTestCase {
                 : "None (Fetch/Overlap)";
 
         int currentHlAddr = cpu.HL.get();
-        int ramValue = mmu.readByte(currentHlAddr);
+        int ramValue = mmu.readByte(currentHlAddr, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-20s | HL(Addr): 0x%04X | RAM[HL]: 0x%02X | A: 0x%02X | Flags: %s | Ticks: %d\n",

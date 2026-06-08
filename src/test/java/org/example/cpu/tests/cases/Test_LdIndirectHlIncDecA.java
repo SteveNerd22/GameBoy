@@ -23,8 +23,8 @@ public class Test_LdIndirectHlIncDecA implements CpuTestCase {
             gb.getCpu().A.set(0xBB);
 
             // Resettiamo le celle di RAM coinvolte
-            gb.getMmu().writeByte(0xC090, 0x00);
-            gb.getMmu().writeByte(0xC091, 0x00);
+            gb.getMmu().writeByte(0xC090, 0x00, gb.getCpu());
+            gb.getMmu().writeByte(0xC091, 0x00, gb.getCpu());
         });
     }
 
@@ -33,7 +33,7 @@ public class Test_LdIndirectHlIncDecA implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico (testiamo il comportamento di 0x22)
         int[] rom = { 0x22, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xC090, 0x00);
+        mmu.writeByte(0xC090, 0x00, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -47,7 +47,7 @@ public class Test_LdIndirectHlIncDecA implements CpuTestCase {
         }
 
         // --- ASSERZIONI SU RAM E REGISTRO ---
-        int valInRam = mmu.readByte(0xC090);
+        int valInRam = mmu.readByte(0xC090, cpu);
         reporter.incrementAssertions();
         if (valInRam != 0xBB) {
             reporter.reportFailure(0x22, String.format(
@@ -75,8 +75,8 @@ public class Test_LdIndirectHlIncDecA implements CpuTestCase {
         int currentHl = cpu.HL.get();
 
         // Leggiamo staticamente i valori di RAM fissi del test per la griglia di telemetria
-        int ram0 = mmu.readByte(0xC090);
-        int ram1 = mmu.readByte(0xC091);
+        int ram0 = mmu.readByte(0xC090, cpu);
+        int ram1 = mmu.readByte(0xC091, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-25s | HL: 0x%04X | A: 0x%02X | Z(WZ): 0x%02X | RAM[0xC090]: 0x%02X | RAM[0xC091]: 0x%02X | Ticks: %d\n",

@@ -24,7 +24,7 @@ public class Test_LdhCIndirectA implements CpuTestCase {
             gb.getCpu().C.set(0x85);
 
             // Inizializziamo la HRAM a 0x00 per costatare il cambiamento live
-            gb.getMmu().writeByte(0xFF85, 0x00);
+            gb.getMmu().writeByte(0xFF85, 0x00, gb.getCpu());
         });
     }
 
@@ -33,7 +33,7 @@ public class Test_LdhCIndirectA implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0xE2, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xFF85, 0x00);
+        mmu.writeByte(0xFF85, 0x00, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -46,7 +46,7 @@ public class Test_LdhCIndirectA implements CpuTestCase {
         }
 
         // --- ASSERZIONE SULLA RAM ---
-        int valInRam = mmu.readByte(0xFF85);
+        int valInRam = mmu.readByte(0xFF85, cpu);
 
         reporter.incrementAssertions();
         if (valInRam != 0xDD) {
@@ -67,7 +67,7 @@ public class Test_LdhCIndirectA implements CpuTestCase {
 
         // Calcoliamo l'indirizzo dinamico basato su C per monitorare la RAM
         int targetAddress = 0xFF00 + (cpu.C.get() & 0xFF);
-        int ramSample = mmu.readByte(targetAddress);
+        int ramSample = mmu.readByte(targetAddress, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-22s | C: 0x%02X | WZ(Internal): 0x%02X%02X | A: 0x%02X | RAM[0x%04X]: 0x%02X | Ticks: %d\n",

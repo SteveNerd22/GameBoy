@@ -20,7 +20,7 @@ public class Test_Nop implements CpuTestCase {
         cpu.F.set(0x00);
         cpu.A.set(0x00);
 
-        mmu.writeByte(0x0000, 0x00);
+        mmu.writeByte(0x0000, 0x00, cpu);
 
         long startTicks = cpu.getTotalTicks();
 

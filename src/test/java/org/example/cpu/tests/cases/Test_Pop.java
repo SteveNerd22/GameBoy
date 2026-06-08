@@ -25,8 +25,8 @@ public class Test_Pop implements CpuTestCase {
             gb.getCpu().C.set(0x00);
 
             // Carichiamo i dati fittizi in RAM che simulano un precedente PUSH (Little Endian nello stack)
-            gb.getMmu().writeByte(0xFFFC, 0x78); // LSB (Finirà in C)
-            gb.getMmu().writeByte(0xFFFD, 0x56); // MSB (Finirà in B)
+            gb.getMmu().writeByte(0xFFFC, 0x78, gb.getCpu()); // LSB (Finirà in C)
+            gb.getMmu().writeByte(0xFFFD, 0x56, gb.getCpu()); // MSB (Finirà in B)
         });
     }
 
@@ -35,8 +35,8 @@ public class Test_Pop implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0xC1, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xFFFC, 0x78);
-        mmu.writeByte(0xFFFD, 0x56);
+        mmu.writeByte(0xFFFC, 0x78, cpu);
+        mmu.writeByte(0xFFFD, 0x56, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -73,8 +73,8 @@ public class Test_Pop implements CpuTestCase {
                 ? engine.getCurrentInstruction().getClass().getSimpleName()
                 : "None (Boot/Fetch)";
 
-        int ramFc = mmu.readByte(0xFFFC);
-        int ramFd = mmu.readByte(0xFFFD);
+        int ramFc = mmu.readByte(0xFFFC, cpu);
+        int ramFd = mmu.readByte(0xFFFD, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-15s | SP: 0x%04X | BC: 0x%02X%02X | RAM[0xFFFC]: 0x%02X | RAM[0xFFFD]: 0x%02X | Ticks: %d\n",

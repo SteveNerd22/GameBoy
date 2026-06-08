@@ -25,9 +25,9 @@ public class Test_LogicIndirectHl implements CpuTestCase {
             cpu.HL.set(0xC000);
 
             // Prepariamo l'ambiente in memoria RAM
-            mmu.writeByte(0xC000, 0xF0); // Per AND
-            mmu.writeByte(0xC001, 0x0A); // Per OR
-            mmu.writeByte(0xC002, 0x5A); // Per XOR
+            mmu.writeByte(0xC000, 0xF0, cpu); // Per AND
+            mmu.writeByte(0xC001, 0x0A, cpu); // Per OR
+            mmu.writeByte(0xC002, 0x5A, cpu); // Per XOR
 
             // Setup dell'accumulatore e flag
             cpu.A.set(0x5F);
@@ -43,9 +43,9 @@ public class Test_LogicIndirectHl implements CpuTestCase {
         cpu.reset();
         cpu.PC.set(0x0000);
         cpu.HL.set(0xC000);
-        mmu.writeByte(0xC000, 0xF0);
-        mmu.writeByte(0xC001, 0x0A);
-        mmu.writeByte(0xC002, 0x5A);
+        mmu.writeByte(0xC000, 0xF0, cpu);
+        mmu.writeByte(0xC001, 0x0A, cpu);
+        mmu.writeByte(0xC002, 0x5A, cpu);
         cpu.A.set(0x5F);
         cpu.F.set(0x00);
 
@@ -104,7 +104,7 @@ public class Test_LogicIndirectHl implements CpuTestCase {
                 : "None (Fetch/Overlap)";
 
         int currentHlAddr = cpu.HL.get();
-        int ramValue = (currentHlAddr >= 0xC000 && currentHlAddr <= 0xC002) ? mmu.readByte(currentHlAddr) : 0x00;
+        int ramValue = (currentHlAddr >= 0xC000 && currentHlAddr <= 0xC002) ? mmu.readByte(currentHlAddr, cpu) : 0x00;
 
         System.out.printf(
                 "M-Cycle: %-2d | PC: 0x%04X | IR: 0x%02X | Active Op: %-22s | HL(Addr): 0x%04X | RAM[HL]: 0x%02X | A: 0x%02X | Flags: %s | Ticks: %d\n",

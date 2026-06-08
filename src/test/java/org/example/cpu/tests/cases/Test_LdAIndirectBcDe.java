@@ -25,7 +25,7 @@ public class Test_LdAIndirectBcDe implements CpuTestCase {
             gb.getCpu().C.set(0x50);
 
             // Prepariamo la cella di memoria RAM simulando un dato presente
-            gb.getMmu().writeByte(0xC050, 0xE7);
+            gb.getMmu().writeByte(0xC050, 0xE7, gb.getCpu());
         });
     }
 
@@ -34,7 +34,7 @@ public class Test_LdAIndirectBcDe implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0x0A, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xC050, 0xE7); // Scrittura nella RAM
+        mmu.writeByte(0xC050, 0xE7, cpu); // Scrittura nella RAM
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -67,7 +67,7 @@ public class Test_LdAIndirectBcDe implements CpuTestCase {
 
         // Leggiamo dinamicamente l'indirizzo attualmente puntato da BC per la tabella
         int targetAddress = (cpu.B.get() << 8) | cpu.C.get();
-        int ramSample = mmu.readByte(targetAddress);
+        int ramSample = mmu.readByte(targetAddress, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-22s | BC: 0x%04X | RAM[0x%04X]: 0x%02X | Z(WZ): 0x%02X | A: 0x%02X | Ticks: %d\n",

@@ -47,7 +47,7 @@ public class Test_LdIndirectHlImmediate implements CpuTestCase {
         }
 
         // --- ASSERZIONE SULLA RAM ---
-        int valInRam = mmu.readByte(0xC000);
+        int valInRam = mmu.readByte(0xC000, cpu);
 
         reporter.incrementAssertions();
         if (valInRam != 0xAA) {
@@ -66,7 +66,7 @@ public class Test_LdIndirectHlImmediate implements CpuTestCase {
                 ? engine.getCurrentInstruction().getClass().getSimpleName()
                 : "None (Boot/Fetch)";
 
-        int ramSample = mmu.readByte(0xC000);
+        int ramSample = mmu.readByte(0xC000, cpu);
 
         // Andiamo a prendere il valore attuale del registro temporaneo interno Z della CPU
         // Adatta la chiamata in base a come hai battezzato il registro Z interno nel tuo codice (es. cpu.Z.get())

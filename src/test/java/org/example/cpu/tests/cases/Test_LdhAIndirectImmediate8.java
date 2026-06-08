@@ -23,7 +23,7 @@ public class Test_LdhAIndirectImmediate8 implements CpuTestCase {
             gb.getCpu().Z.set(0x00);
 
             // Prepariamo la cella in HRAM con il valore che l'istruzione dovrà leggere
-            gb.getMmu().writeByte(0xFF88, 0x4B);
+            gb.getMmu().writeByte(0xFF88, 0x4B, gb.getCpu());
         });
     }
 
@@ -32,7 +32,7 @@ public class Test_LdhAIndirectImmediate8 implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0xF0, 0x88, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xFF88, 0x4B);
+        mmu.writeByte(0xFF88, 0x4B, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -62,7 +62,7 @@ public class Test_LdhAIndirectImmediate8 implements CpuTestCase {
                 : "None (Boot/Fetch)";
 
         // Monitoraggio della cella target finale in HRAM (0xFF88)
-        int ramSample = mmu.readByte(0xFF88);
+        int ramSample = mmu.readByte(0xFF88, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-28s | WZ(Internal): 0x%02X%02X | RAM[0xFF88]: 0x%02X | A: 0x%02X | Ticks: %d\n",

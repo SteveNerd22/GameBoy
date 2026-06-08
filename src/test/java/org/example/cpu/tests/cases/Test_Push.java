@@ -25,8 +25,8 @@ public class Test_Push implements CpuTestCase {
             gb.getCpu().C.set(0x34);
 
             // Puliamo preventivamente le zone di memoria dello stack
-            gb.getMmu().writeByte(0xFFFD, 0x00);
-            gb.getMmu().writeByte(0xFFFC, 0x00);
+            gb.getMmu().writeByte(0xFFFD, 0x00, gb.getCpu());
+            gb.getMmu().writeByte(0xFFFC, 0x00, gb.getCpu());
         });
     }
 
@@ -35,8 +35,8 @@ public class Test_Push implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0xC5, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xFFFD, 0x00);
-        mmu.writeByte(0xFFFC, 0x00);
+        mmu.writeByte(0xFFFD, 0x00, cpu);
+        mmu.writeByte(0xFFFC, 0x00, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -50,8 +50,8 @@ public class Test_Push implements CpuTestCase {
         }
 
         // --- ASSERZIONI SULLO STATO DELLO STACK ---
-        int highByteInRam = mmu.readByte(0xFFFD);
-        int lowByteInRam = mmu.readByte(0xFFFC);
+        int highByteInRam = mmu.readByte(0xFFFD, cpu);
+        int lowByteInRam = mmu.readByte(0xFFFC, cpu);
 
         reporter.incrementAssertions();
         if (cpu.SP.get() != 0xFFFC) {
@@ -76,8 +76,8 @@ public class Test_Push implements CpuTestCase {
                 ? engine.getCurrentInstruction().getClass().getSimpleName()
                 : "None (Boot/Fetch)";
 
-        int ramFd = mmu.readByte(0xFFFD);
-        int ramFc = mmu.readByte(0xFFFC);
+        int ramFd = mmu.readByte(0xFFFD, cpu);
+        int ramFc = mmu.readByte(0xFFFC, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-15s | SP: 0x%04X | BC: 0x%02X%02X | RAM[0xFFFD]: 0x%02X | RAM[0xFFFC]: 0x%02X | Ticks: %d\n",

@@ -24,7 +24,7 @@ public class Test_LdhAIndirectC implements CpuTestCase {
             gb.getCpu().C.set(0x85);
 
             // Prepariamo la cella in HRAM con il valore di test
-            gb.getMmu().writeByte(0xFF85, 0x7A);
+            gb.getMmu().writeByte(0xFF85, 0x7A, gb.getCpu());
         });
     }
 
@@ -33,7 +33,7 @@ public class Test_LdhAIndirectC implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0xF2, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xFF85, 0x7A);
+        mmu.writeByte(0xFF85, 0x7A, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -65,7 +65,7 @@ public class Test_LdhAIndirectC implements CpuTestCase {
 
         // Calcoliamo l'indirizzo dinamico basato su C
         int targetAddress = 0xFF00 + (cpu.C.get() & 0xFF);
-        int ramSample = mmu.readByte(targetAddress);
+        int ramSample = mmu.readByte(targetAddress, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-22s | C: 0x%02X | WZ(Internal): 0x%02X%02X | RAM[0x%04X]: 0x%02X | A: 0x%02X | Ticks: %d\n",

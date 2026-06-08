@@ -23,8 +23,8 @@ public class Test_LdIndirectImmediate16Sp implements CpuTestCase {
             gb.getCpu().Z.set(0x00);
 
             // Puliamo la RAM di destinazione per rilevare la scrittura hardware
-            gb.getMmu().writeByte(0xC500, 0x00);
-            gb.getMmu().writeByte(0xC501, 0x00);
+            gb.getMmu().writeByte(0xC500, 0x00, gb.getCpu());
+            gb.getMmu().writeByte(0xC501, 0x00, gb.getCpu());
         });
     }
 
@@ -33,8 +33,8 @@ public class Test_LdIndirectImmediate16Sp implements CpuTestCase {
         // Logica fissa per il TestSuiteRunner automatico
         int[] rom = { 0x08, 0x00, 0xC5, 0x00 };
         mmu.loadCartridge(rom);
-        mmu.writeByte(0xC500, 0x00);
-        mmu.writeByte(0xC501, 0x00);
+        mmu.writeByte(0xC500, 0x00, cpu);
+        mmu.writeByte(0xC501, 0x00, cpu);
 
         cpu.reset();
         cpu.PC.set(0x0000);
@@ -46,8 +46,8 @@ public class Test_LdIndirectImmediate16Sp implements CpuTestCase {
         }
 
         // --- ASSERZIONI SULLA RAM ---
-        int ramLow = mmu.readByte(0xC500);
-        int ramHigh = mmu.readByte(0xC501);
+        int ramLow = mmu.readByte(0xC500, cpu);
+        int ramHigh = mmu.readByte(0xC501, cpu);
 
         reporter.incrementAssertions();
         if (ramLow != 0xFE || ramHigh != 0xFF) {
@@ -68,8 +68,8 @@ public class Test_LdIndirectImmediate16Sp implements CpuTestCase {
                 : "None (Boot/Fetch)";
 
         // Monitoraggio in tempo reale delle due celle di Work RAM
-        int ramLow = mmu.readByte(0xC500);
-        int ramHigh = mmu.readByte(0xC501);
+        int ramLow = mmu.readByte(0xC500, cpu);
+        int ramHigh = mmu.readByte(0xC501, cpu);
 
         System.out.printf(
                 "M-Cycle: %d | PC: 0x%04X | IR: 0x%02X | Active Op: %-26s | SP: 0x%04X | WZ: 0x%02X%02X | RAM[0xC500]: 0x%02X | RAM[0xC501]: 0x%02X | Ticks: %d\n",

@@ -22,7 +22,7 @@ public class ExecutionEngine {
      * Il cuore pulsante del ciclo macchina.
      * Esegue Execute e Fetch in parallelo secondo le regole del silicio SM83.
      */
-    public void pulse(SM83 cpu) {
+    public void pulse(SM83 cpu, boolean isCBSet) {
         this.stateTicks++;
         this.totalTicks ++;
 
@@ -41,7 +41,8 @@ public class ExecutionEngine {
             cpu.PC.sampleFromIduBus(); // PC = PC + 1
 
             int nextOpcode = cpu.IR.get();
-            this.currentInstruction = InstructionRegistry.get(nextOpcode);
+            this.currentInstruction = InstructionRegistry.get(nextOpcode, isCBSet);
+            cpu.controlUnit.resetCBPrefix();
             this.currentInstruction.prepare(nextOpcode);
         }
 
