@@ -38,7 +38,8 @@ public class PhysicalMemory {
      * Permette a un componente (es. la PPU) di bloccare il bus di questa memoria.
      */
     public void lock(BusWriter component) {
-        this.owner = component;
+        if(owner  == null)
+            this.owner = component;
     }
 
     /**
