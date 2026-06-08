@@ -21,21 +21,25 @@ public final class Opcode_JumpRelativeConditional extends CpuInstruction {
                 return false;
             }
             case 1 -> {
-                if(!cpu.F.isZeroSet()) {
+                if(!checkCondition(opcode, cpu)) {
                     cpu.PC.emit();
                     return true;
                 }
-                boolean z_sign = (cpu.Z.get() & 0x80) != 0;
+                boolean z_sign = (cpu.Z.get() & 0x80) == 0;
                 cpu.Z.emitToAluBus1();
                 cpu.PC.getLow().emitToAluBus2();
                 int flags = cpu.alu.cpb();
                 cpu.Z.sampleSoCBus();
                 cpu.emitHighPCHOnAddressBus();
                 boolean cpb_sign = (flags & 0x80) != 0;
+
                 if(cpb_sign && !z_sign)
                     cpu.idu.incrementFormSoC();
                 else if(!cpb_sign && z_sign)
                     cpu.idu.decrementFormSoC();
+                else
+                    cpu.idu.copyFormSoC();
+
                 int Z = cpu.Z.get();
                 cpu.WZ.sampleFromIduBus();
                 cpu.Z.set(Z);

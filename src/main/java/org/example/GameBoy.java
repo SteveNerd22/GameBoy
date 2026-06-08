@@ -38,7 +38,7 @@ public class GameBoy {
         this.mmu = new MMU(this.addressBus, this.dataBus, this.interruptBus);
 
         // 3. STRATO CO-PROCESSORI: Crei la PPU che gestisce la sua VRAM/OAM isolata
-        this.ppu = new PPU(interruptBus, dataBus, addressBus, mmu.getVram(), mmu.getOam());
+        this.ppu = new PPU(interruptBus, dataBus, addressBus, mmu.getVram(), mmu.getOam(), mmu.getIoRegisters());
 
         // 4. STRATO CPU: Crei il processore principale, che ora può dialogare con MMU e PPU sui bus
         this.cpu = new SM83(this.interruptBus, this.dataBus, this.addressBus);

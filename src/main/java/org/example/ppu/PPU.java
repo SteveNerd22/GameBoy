@@ -15,18 +15,16 @@ public class PPU implements BusWriter {
     private final AddressBus addressBus;
     private final DataBus dataBus;
     private final InterruptBus interruptBus;
+    private final PhysicalMemory vram, oam, ioRegisters;
 
-    PhysicalMemory vram, oam;
-
-
-    // --- Registri Interni ---
-    private int lcdc = 0x91;
-    private int stat = 0x85;
-    private int scy  = 0x00;
-    private int scx  = 0x00;
-    private int ly   = 0x00;
-    private int lyc  = 0x00;
-    private int bgp  = 0xFC;
+    // --- Offset dei Registri Hardware dentro IO_REGISTERS ---
+    private static final int REG_LCDC = 0x0040; // 0xFF40
+    private static final int REG_STAT = 0x0041; // 0xFF41
+    private static final int REG_SCY  = 0x0042; // 0xFF42
+    private static final int REG_SCX  = 0x0043; // 0xFF43
+    private static final int REG_LY   = 0x0044; // 0xFF44
+    private static final int REG_LYC  = 0x0045; // 0xFF45
+    private static final int REG_BGP  = 0x0047; // 0xFF47
 
     private int tCyclesCounter = 0;
     private final BufferedImage screenImage;
@@ -36,15 +34,23 @@ public class PPU implements BusWriter {
             0xE0F8D0, 0x88C070, 0x346856, 0x081820
     };
 
-    public PPU(InterruptBus interruptBus, DataBus dataBus, AddressBus addressBus, PhysicalMemory vram, PhysicalMemory oam) {
+    public PPU(InterruptBus interruptBus, DataBus dataBus, AddressBus addressBus,
+               PhysicalMemory vram, PhysicalMemory oam, PhysicalMemory ioRegisters) {
         this.interruptBus = interruptBus;
         this.dataBus = dataBus;
         this.addressBus = addressBus;
-        this.screenImage = new BufferedImage(SCREEN_WIDTH, SCREEN_HEIGHT, BufferedImage.TYPE_INT_RGB);
-        this.pixelRaster = ((DataBufferInt) screenImage.getRaster().getDataBuffer()).getData();
-        this.interruptBus.registerWriter(this);
         this.vram = vram;
         this.oam = oam;
+        this.ioRegisters = ioRegisters;
+
+        this.screenImage = new BufferedImage(SCREEN_WIDTH, SCREEN_HEIGHT, BufferedImage.TYPE_INT_RGB);
+        this.pixelRaster = ((DataBufferInt) screenImage.getRaster().getDataBuffer()).getData();
+
+        // Inizializzazione dei valori di boot hardware direttamente in memoria
+        ioRegisters.write(this, REG_LCDC, 0x91);
+        ioRegisters.write(this, REG_STAT, 0x85);
+        ioRegisters.write(this, REG_BGP,  0xFC);
+
         clearScreen();
     }
 
@@ -53,11 +59,19 @@ public class PPU implements BusWriter {
         tCyclesCounter++;
         if (tCyclesCounter >= 456) {
             tCyclesCounter = 0;
-            ly++;
-            if (ly > 153) ly = 0;
+
+            // Leggi il vecchio LY, incrementalo e riscrivilo direttamente nella memoria condivisa
+            int currentLy = ioRegisters.read(this, REG_LY);
+            currentLy++;
+            if (currentLy > 153) currentLy = 0;
+
+            ioRegisters.write(this, REG_LY, currentLy);
         }
 
-        // --- 2. AGGIORNAMENTO MACCHINA A STATI (Esempio semplificato) ---
+        // Recuperiamo LY aggiornato per la macchina a stati interna
+        int ly = ioRegisters.read(this, REG_LY);
+
+        // --- 2. AGGIORNAMENTO MACCHINA A STATI ---
         int currentMode;
         if (ly >= 144) {
             currentMode = 1;
@@ -71,61 +85,33 @@ public class PPU implements BusWriter {
         } else {
             currentMode = 0;
         }
-        stat = (stat & 0xFC) | currentMode;
+
+        // Aggiorna lo STAT register direttamente nella memoria condivisa
+        int currentStat = ioRegisters.read(this, REG_STAT);
+        currentStat = (currentStat & 0xFC) | currentMode;
+        ioRegisters.write(this, REG_STAT, currentStat);
 
         // --- 3. CAMPIONAMENTO ATTIVO DEI BUS ---
         int address = addressBus.sampleAddress();
 
+        // Ora la PPU intercetta SOLO la VRAM sul bus (perché ai registri IO ci pensa già la MMU!)
         if (address >= 0x8000 && address <= 0x9FFF) {
             if (currentMode != 3) {
                 int byteData = dataBus.sampleByte();
                 vram.write(this, address - 0x8000, byteData);
             }
-        } else if (address >= 0xFF40 && address <= 0xFF47) {
-            handleRegisterAccess(address);
-        }
-
-    }
-
-    private void handleRegisterAccess(int address) {
-        // 1. Campioniamo il segnale di controllo dall'InterruptBus per capire l'intenzione della CPU
-        int ctrlSignal = interruptBus.sampleSignal();
-
-        // --- CASO SCRITTURA (Bit 9 attivo: MEM_WR -> 0x0200) ---
-        if ((ctrlSignal & InterruptSignal.MEM_WR) != 0) {
-            int byteData = dataBus.sampleByte();
-            switch (address) {
-                case 0xFF40 -> lcdc = byteData;
-                case 0xFF41 -> stat = (stat & 0x87) | (byteData & 0x78); // Cambiano solo i bit 3-6
-                case 0xFF42 -> scy = byteData;
-                case 0xFF43 -> scx = byteData;
-                case 0xFF45 -> lyc = byteData;
-                case 0xFF47 -> bgp = byteData;
-            }
-        }
-        // --- CASO LETTURA (Bit 8 attivo: MEM_RD -> 0x0100) ---
-        else if ((ctrlSignal & InterruptSignal.MEM_RD) != 0) {
-            int value = switch (address) {
-                case 0xFF40 -> lcdc;
-                case 0xFF41 -> stat;
-                case 0xFF42 -> scy;
-                case 0xFF43 -> scx;
-                case 0xFF44 -> ly;   // La CPU legge la scanline attuale
-                case 0xFF45 -> lyc;
-                case 0xFF47 -> bgp;
-                default -> 0xFF;
-            };
-            dataBus.broadcast(this, new ByteData(value));
         }
     }
 
     private void renderScanline() {
-        int offset = ly * SCREEN_WIDTH;
+        int ly   = ioRegisters.read(this, REG_LY);
+        int scy  = ioRegisters.read(this, REG_SCY);
+        int scx  = ioRegisters.read(this, REG_SCX);
 
+        int offset = ly * SCREEN_WIDTH;
         int worldY = (ly + scy) & 0xFF;
         int tileRow = worldY / 8;
         int pixelRowInTile = worldY % 8;
-
         int mapOffset = 0x1800;
 
         for (int x = 0; x < SCREEN_WIDTH; x++) {
@@ -155,11 +141,9 @@ public class PPU implements BusWriter {
         }
     }
 
-    public int getLy() { return this.ly; }
+    // Getter modificati per attingere dalla memoria reale
+    public int getLy() { return ioRegisters.read(this, REG_LY); }
     public int getTCyclesCounter() { return this.tCyclesCounter; }
     public BufferedImage getScreenImage() { return screenImage; }
-
-    public PhysicalMemory getVram() {
-        return vram;
-    }
+    public PhysicalMemory getVram() { return vram; }
 }

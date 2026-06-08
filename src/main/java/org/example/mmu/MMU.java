@@ -4,9 +4,13 @@ import org.example.bus.*;
 import org.example.bus.data.ByteData;
 import org.example.bus.data.InterruptSignal;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 public class MMU implements BusWriter {
 
-    // Le memorie fisiche reali vengono create internamente
+    // Memorie fisiche reali create internamente
     private final PhysicalMemory romBank0;
     private final PhysicalMemory romBank1N;
     private final PhysicalMemory vram;
@@ -24,6 +28,9 @@ public class MMU implements BusWriter {
     private int currentControlSignal = InterruptSignal.NONE;
     private int latchedAddress = 0x0000;
 
+    // Gestione File Log per la porta Seriale
+    private PrintWriter fileLogWriter;
+
     public MMU(AddressBus addressBus, DataBus dataBus, InterruptBus interruptBus) {
         this.addressBus = addressBus;
         this.dataBus = dataBus;
@@ -40,7 +47,15 @@ public class MMU implements BusWriter {
         this.hram           = new PhysicalMemory(getRegionSize(MemoryRegion.HRAM));
         this.interruptEnable = new PhysicalMemory(getRegionSize(MemoryRegion.INTERRUPT_ENABLE));
 
-        // Listener dei bus (Invariati)
+        // Inizializza il file di log per la seriale
+        try {
+            // true = sovrascrive il file ad ogni avvio dell'emulatore per non accumulare vecchi test
+            this.fileLogWriter = new PrintWriter(new FileWriter("serial_output.txt", false), true);
+        } catch (IOException e) {
+            System.err.println("[MMU-WARN] Impossibile creare il file serial_output.txt: " + e.getMessage());
+        }
+
+        // Listener dei bus
         this.interruptBus.registerReader((_, signal) -> this.currentControlSignal = signal.getBitMask());
         this.addressBus.registerReader((requestor, data) -> {
             this.latchedAddress = data.getAddress() & 0xFFFF;
@@ -50,7 +65,6 @@ public class MMU implements BusWriter {
     }
 
     private void executeMemoryAccess(BusWriter requestor) {
-
         if ((this.currentControlSignal & InterruptSignal.MEM_RD) != 0) {
             int byteRead = readPhysicalMemory(this.latchedAddress, requestor);
             this.dataBus.broadcast(this, new ByteData(byteRead));
@@ -83,7 +97,7 @@ public class MMU implements BusWriter {
     }
 
     // =========================================================================
-    // LOGICA DI ROUTING (Invariata, usa i riferimenti interni)
+    // LOGICA DI ROUTING
     // =========================================================================
 
     private int readPhysicalMemory(int address, BusWriter requestor) {
@@ -115,7 +129,24 @@ public class MMU implements BusWriter {
             case ECHO_RAM       -> wram.write(requestor, address - MemoryRegion.ECHO_RAM.getStart(), value);
             case OAM            -> oam.write(requestor, address - MemoryRegion.OAM.getStart(), value);
             case NOT_USABLE     -> {}
-            case IO_REGISTERS   -> ioRegisters.write(requestor, address - MemoryRegion.IO_REGISTERS.getStart(), value);
+            case IO_REGISTERS   -> {
+                // --- INTERCETTAZIONE PORTA SERIALE (Blargg Test Output) ---
+                // SB = 0xFF01 (Registro dati), SC = 0xFF02 (Registro controllo)
+                // Se viene scritto 0x81 in SC, significa: "Trasmetti il carattere presente in SB"
+                if (address == 0xFF02 && value == 0x81) {
+                    // Leggiamo il carattere precedentemente depositato in SB (offset 0x01 dei registri IO)
+                    int character = ioRegisters.read(requestor, 0x0001);
+
+                    // 1. Stampa immediata sulla console Java standard
+                    System.out.print((char) character);
+
+                    // 2. Scrittura su file dedicata per un output pulito e persistente
+                    if (fileLogWriter != null) {
+                        fileLogWriter.print((char) character);
+                    }
+                }
+                ioRegisters.write(requestor, address - MemoryRegion.IO_REGISTERS.getStart(), value);
+            }
             case HRAM           -> hram.write(requestor, address - MemoryRegion.HRAM.getStart(), value);
             case INTERRUPT_ENABLE -> interruptEnable.write(requestor, address - MemoryRegion.INTERRUPT_ENABLE.getStart(), value);
         }

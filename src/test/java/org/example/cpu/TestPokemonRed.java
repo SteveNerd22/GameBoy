@@ -1,6 +1,7 @@
 package org.example.cpu;
 
 import org.example.GameBoy;
+import org.example.Main;
 import org.example.bus.data.InterruptSignal;
 import org.example.mmu.MMU;
 import org.example.mmu.PhysicalMemory;
@@ -14,8 +15,10 @@ import java.util.Scanner;
 public class TestPokemonRed {
 
     public static void main(String[] args) {
-        // Path romPath = Paths.get("PokemonRed.gb");
-        Path romPath = Paths.get("06-ld r,r.gb");
+        Main.DEBUG = false;
+        Path romPath = Paths.get("PokemonRed.gb");
+        //Path romPath = Paths.get("06-ld r,r.gb");
+        //Path romPath = Paths.get("cpu_instrs.gb");
 
         if (!Files.exists(romPath)) {
             System.err.println("❌ ERRORE: ROM di Pokemon Rosso non trovata.");
@@ -32,35 +35,36 @@ public class TestPokemonRed {
             // 1. Setup del GameBoy
             GameBoy gameBoy = new GameBoy();
 
-            gameBoy.getCpu().SoCAddress.registerReader((sender, data) -> System.out.printf("[BUS-ADDR] Mittente: %-12s | Indirizzo: 0x%04X\n",
-                    sender.getClass().getSimpleName(),
-                    data.getAddress()
-            ));
-
-            gameBoy.getCpu().SoCData.registerReader((sender, data) -> System.out.printf("[BUS-DATA] Mittente: %-12s | Dato: 0x%02X\n",
-                    sender.getClass().getSimpleName(),
-                    data.getByteValue()
-            ));
-
-            gameBoy.getCpu().SoCInterrupts.registerReader((sender, data) -> {
-                int mask = data.getBitMask();
-
-                // Traduzione al volo dei tuoi segnali di controllo per rendere la console leggibile
-                String signalType = "INTERRUPT (0x" + String.format("%04X", mask) + ")";
-                if (mask == InterruptSignal.MEM_RD) signalType = "CONTROL: MEM_RD 📖";
-                else if (mask == InterruptSignal.MEM_WR) signalType = "CONTROL: MEM_WR ✍️";
-                else if (mask == InterruptSignal.NONE) signalType = "NONE 🛑";
-
-                System.out.printf("[BUS-CTRL] Mittente: %-12s | Segnale: %s\n",
+            if(Main.DEBUG) {
+                gameBoy.getCpu().SoCAddress.registerReader((sender, data) -> System.out.printf("[BUS-ADDR] Mittente: %-12s | Indirizzo: 0x%04X\n",
                         sender.getClass().getSimpleName(),
-                        signalType
-                );
-            });
+                        data.getAddress()
+                ));
 
+                gameBoy.getCpu().SoCData.registerReader((sender, data) -> System.out.printf("[BUS-DATA] Mittente: %-12s | Dato: 0x%02X\n",
+                        sender.getClass().getSimpleName(),
+                        data.getByteValue()
+                ));
 
+                gameBoy.getCpu().SoCInterrupts.registerReader((sender, data) -> {
+                    int mask = data.getBitMask();
 
-            // 🛑 SCOLLEGHIAMO IL QUARZO INTERNO REALE: Il debugger prende il controllo totale del tempo
-            gameBoy.setDebuggerControlled(true);
+                    // Traduzione al volo dei tuoi segnali di controllo per rendere la console leggibile
+                    String signalType = "INTERRUPT (0x" + String.format("%04X", mask) + ")";
+                    if (mask == InterruptSignal.MEM_RD) signalType = "CONTROL: MEM_RD 📖";
+                    else if (mask == InterruptSignal.MEM_WR) signalType = "CONTROL: MEM_WR ✍️";
+                    else if (mask == InterruptSignal.NONE) signalType = "NONE 🛑";
+
+                    System.out.printf("[BUS-CTRL] Mittente: %-12s | Segnale: %s\n",
+                            sender.getClass().getSimpleName(),
+                            signalType
+                    );
+                });
+
+                // 🛑 SCOLLEGHIAMO IL QUARZO INTERNO REALE: Il debugger prende il controllo totale del tempo
+                gameBoy.setDebuggerControlled(true);
+            }
+
 
             // 2. Carica la cartuccia nella MMU
             MMU mmu = gameBoy.getMmu();
@@ -79,21 +83,23 @@ public class TestPokemonRed {
             final long[] mCyclesExecuted = {0};
             final int[] tTickCounter = {0};
 
-            gameBoy.RegisterPulseListener(() -> {
-                tTickCounter[0]++;
-                if (tTickCounter[0] >= 4) {
-                    tTickCounter[0] = 0;
-                    mCyclesExecuted[0]++;
+            if(Main.DEBUG) {
+                gameBoy.RegisterPulseListener(() -> {
+                    tTickCounter[0]++;
+                    if (tTickCounter[0] >= 4) {
+                        tTickCounter[0] = 0;
+                        mCyclesExecuted[0]++;
 
-                    int currentPC = cpu.PC.get();
-                    int opcode = mmu.readByte(currentPC, cpu);
+                        int currentPC = cpu.PC.get();
+                        int opcode = mmu.readByte(currentPC, cpu);
 
-                    System.out.printf(
-                            "M-Cycle: %-5d | PC: 0x%04X | Opcode: 0x%02X | IR: 0x%02X | A: 0x%02X | HL: 0x%04X | Flags: %s\n",
-                            mCyclesExecuted[0], currentPC, opcode, cpu.IR.get(), cpu.A.get(), cpu.HL.get(), getFlagsString(cpu.F.get())
-                    );
-                }
-            });
+                        System.out.printf(
+                                "M-Cycle: %-5d | PC: 0x%04X | Opcode: 0x%02X | IR: 0x%02X | A: 0x%02X | HL: 0x%04X | Flags: %s\n",
+                                mCyclesExecuted[0], currentPC, opcode, cpu.IR.get(), cpu.A.get(), cpu.HL.get(), getFlagsString(cpu.F.get())
+                        );
+                    }
+                });
+            }
 
             // Mostriamo la finestra Swing (rimarrà in attesa dei frame che gli manderemo noi)
             gameBoy.turnOn();
