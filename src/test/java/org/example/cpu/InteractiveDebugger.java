@@ -13,6 +13,11 @@ import java.util.*;
 public class InteractiveDebugger {
     private final Map<String, DebugCommand> commands = new HashMap<>();
     private final List<PulseListener> customPulseListeners = new ArrayList<>();
+    private EmulationEndingHandler endingHandler = null;
+    private boolean nonStopMode = false;
+    private boolean standardErrorRedirect = false;
+    private String errorLogPath;
+    private TeePrintStream teeStream;
 
     public InteractiveDebugger() {
         registerCommand(new RegCommand());
@@ -68,6 +73,63 @@ public class InteractiveDebugger {
         return this;
     }
 
+    /**
+     * Configura l'handler da invocare al termine dell'emulazione.
+     */
+    public InteractiveDebugger onEnding(EmulationEndingHandler handler) {
+        this.endingHandler = handler;
+        return this;
+    }
+
+    /**
+     * Copia tutto lo Standard Error (compresi i crash e i dump) su un file dedicato.
+     * Mantiene la console invariata.
+     */
+    public InteractiveDebugger copyErrorsToFile(String path) {
+        this.errorLogPath = path;
+        this.standardErrorRedirect = false;
+        return this;
+    }
+
+    /**
+     * Redirige tutto lo Standard Error (compresi i crash e i dump) su un file dedicato.
+     * Mantiene la console pulita per lo standard output o per l'esecuzione silenziosa.
+     */
+    public InteractiveDebugger redirectErrorsToFile(String path) {
+        this.errorLogPath = path;
+        this.standardErrorRedirect = true;
+        return this;
+    }
+
+    /**
+     * Attiva la modalità ad avanzamento continuo. Il debugger eseguirà i cicli
+     * all'infinito (o finché non incontra un breakpoint) senza mai chiedere l'input utente.
+     */
+    public InteractiveDebugger runNonStop() {
+        this.nonStopMode = true;
+        return this;
+    }
+
+    /**
+     * Permette di eseguire un comando del debugger programmaticamente via codice.
+     * Molto utile negli handler di fine corsa o nei listener.
+     */
+    public void executeCommand(String input, DebugContext ctx) {
+        String trimmed = input.trim();
+        if (trimmed.isEmpty()) return;
+
+        String[] parts = trimmed.split("\\s+");
+        String keyword = parts[0].toLowerCase();
+        String[] args = Arrays.copyOfRange(parts, 1, parts.length);
+
+        if (commands.containsKey(keyword)) {
+            DebugCommand cmd = commands.get(keyword);
+            cmd.execute(ctx, args);
+        } else {
+            System.out.println("⚠️ Comando programmatico sconosciuto: " + keyword);
+        }
+    }
+
     public void start(Path romPath) {
         start(romPath, 0x0100);
     }
@@ -77,6 +139,24 @@ public class InteractiveDebugger {
             System.err.println("❌ ERRORE: ROM non trovata.");
             return;
         }
+
+        if (this.errorLogPath != null) {
+            try {
+                java.io.PrintStream fileOut = new java.io.PrintStream(
+                        new java.io.FileOutputStream(this.errorLogPath, false)
+                );
+                if (this.standardErrorRedirect) {
+                    System.setErr(fileOut);
+                } else {
+                    teeStream = new TeePrintStream(System.err, fileOut);
+                    System.setErr(teeStream);
+                }
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("⚠️ Impossibile creare il file di log degli errori: " + this.errorLogPath);
+            }
+        }
+
+        DebugContext ctx = null;
 
         try {
             byte[] rawBytes = Files.readAllBytes(romPath);
@@ -94,50 +174,82 @@ public class InteractiveDebugger {
             SM83 cpu = gameBoy.getCpu();
             setupInitialState(cpu, initialPC);
 
-            DebugContext ctx = new DebugContext(gameBoy);
+            ctx = new DebugContext(gameBoy);
 
             setupPulseListeners(gameBoy, ctx);
 
             gameBoy.turnOn();
-            System.out.printf("🔥 REPL DEBUGGER PRONTO (PC: 0x%04X). Scrivi un comando o premi Invio.\n", initialPC);
 
-            Scanner scanner = new Scanner(System.in);
+            if (this.nonStopMode) {
+                System.out.printf("🚀 MODALITÀ CONTINUA ATTIVA (PC: 0x%04X). L'emulatore sta correndo...\n", initialPC);
 
-            while (ctx.isRunning()) {
-                System.out.print("dbg> ");
-                String input = scanner.nextLine().trim();
-
-                if (input.equalsIgnoreCase("stop")) {
-                    ctx.stop();
-                    break;
-                }
-
-                if (input.isEmpty()) {
+                while (ctx.isRunning()) {
                     eseguiStep(gameBoy, ctx, 1);
-                    continue;
+
+                    if (ctx.shouldBreakAt(gameBoy.getCpu().PC.get())) {
+                        System.out.println("🛑 Emulazione interrotta per breakpoint.");
+                        break;
+                    }
                 }
+            } else {
+                // ⌨️ MODALITÀ REPL STANDARD (Interattiva con input utente)
+                System.out.printf("🔥 REPL DEBUGGER PRONTO (PC: 0x%04X). Scrivi un comando o premi Invio.\n", initialPC);
+                Scanner scanner = new Scanner(System.in);
 
-                String[] parts = input.split("\\s+");
-                String keyword = parts[0].toLowerCase();
-                String[] args = Arrays.copyOfRange(parts, 1, parts.length);
+                while (ctx.isRunning()) {
+                    System.out.print("dbg> ");
+                    String input = scanner.nextLine().trim();
 
-                if (commands.containsKey(keyword)) {
-                    DebugCommand cmd = commands.get(keyword);
-                    cmd.execute(ctx, args);
-                } else {
-                    try {
-                        int n = Integer.parseInt(keyword);
-                        eseguiStep(gameBoy, ctx, n);
-                    } catch (NumberFormatException e) {
-                        System.out.println("⚠️ Comando sconosciuto. Comandi disponibili:");
-                        commands.values().forEach(c -> System.out.printf("  %-10s : %s\n", c.getKeyword(), c.getHelp()));
+                    if (input.equalsIgnoreCase("stop")) {
+                        ctx.stop();
+                        break;
+                    }
+
+                    if (input.isEmpty()) {
+                        eseguiStep(gameBoy, ctx, 1);
+                        continue;
+                    }
+
+                    String[] parts = input.split("\\s+");
+                    String keyword = parts[0].toLowerCase();
+                    String[] args = Arrays.copyOfRange(parts, 1, parts.length);
+
+                    if (commands.containsKey(keyword)) {
+                        DebugCommand cmd = commands.get(keyword);
+                        cmd.execute(ctx, args);
+                    } else {
+                        try {
+                            int n = Integer.parseInt(keyword);
+                            eseguiStep(gameBoy, ctx, n);
+                        } catch (NumberFormatException e) {
+                            System.out.println("⚠️ Comando sconosciuto.");
+                        }
                     }
                 }
             }
 
+            if (endingHandler != null) {
+                endingHandler.onExit(ctx);
+            }
+
+        } catch (Throwable e) {
+            if (endingHandler != null && ctx != null) {
+                System.out.flush();
+                java.io.PrintStream originalOut = System.out;
+                try {
+                    System.setOut(System.err);
+                    endingHandler.onError(ctx, e);
+                } finally {
+                    System.setOut(originalOut);
+                    System.err.close();
+                }
+            } else {
+                System.err.println("Anomalia rilevata senza handler configurato:");
+                e.printStackTrace();
+            }
+        } finally {
+            System.out.println("\n👋 Sessione di emulazione conclusa.");
             System.exit(0);
-        } catch (IOException e) {
-            System.err.println("Errore di I/O: " + e.getMessage());
         }
     }
 
@@ -232,6 +344,39 @@ public class InteractiveDebugger {
             cpu.B.set(0x00);    cpu.C.set(0x00);
             cpu.D.set(0x00);    cpu.E.set(0x00);
             cpu.H.set(0x00);    cpu.L.set(0x00);
+        }
+    }
+
+    private static class TeePrintStream extends java.io.PrintStream {
+        private final java.io.PrintStream secondStream;
+
+        public TeePrintStream(java.io.OutputStream main, java.io.PrintStream second) {
+            super(main, true); // true = auto-flush attivo
+            this.secondStream = second;
+        }
+
+        @Override
+        public void write(int b) {
+            super.write(b);
+            secondStream.write(b);
+        }
+
+        @Override
+        public void write(byte[] buf, int off, int len) {
+            super.write(buf, off, len);
+            secondStream.write(buf, off, len);
+        }
+
+        @Override
+        public void flush() {
+            super.flush();
+            secondStream.flush();
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            secondStream.close();
         }
     }
 }

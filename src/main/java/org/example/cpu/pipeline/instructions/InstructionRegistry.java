@@ -42,9 +42,10 @@ public class InstructionRegistry {
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("FATAL: Failed to auto-register sealed instruction: " + clazz.getSimpleName());
-                    e.printStackTrace();
-                    System.exit(1);
+                    throw new RuntimeException(
+                            "FATAL: Failed to auto-register sealed instruction: " + clazz.getSimpleName(),
+                            e
+                    );
                 }
             }
         }
