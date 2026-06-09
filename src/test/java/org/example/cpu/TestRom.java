@@ -15,6 +15,7 @@ public class TestRom {
         System.out.println("🎮 Inizializzazione sessione di test per Pokémon Rosso...");
         debugger
                 .withoutLogging()
+                //.withInitLogging()
                 .withMemoryLogging(false, true)
                 .runNonStop()
                 .onEnding(new EmulationEndingHandler() {

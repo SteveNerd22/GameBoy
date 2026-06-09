@@ -10,7 +10,7 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
 
     private final InterruptBus SoCInterrupts;
     private final ExecutionEngine executionEngine;
-    private boolean isHalting = false;
+    private boolean isHalting = false, isStopping = false;
     private boolean isCBPrefix = false;
 
     // PRE-ALLOCAZIONE DEI SEGNALI: Evita di fare "new" a ogni M-Cycle sul bus
@@ -65,6 +65,7 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
 
     public void reset() {
         isHalting = false;
+        isStopping = false;
         isCBPrefix = false;
         sendReadSignal();
         executionEngine.reset();
@@ -80,6 +81,14 @@ public class ControlUnit implements BusWriter, BusReader<InterruptSignal> {
 
     public void disableInterrupt() {
         // TODO: aggiungere supporto per interrupt
+    }
+
+    public void enterHaltMode() {
+        this.isHalting = true;
+    }
+
+    public void enterStopMode() {
+        this.isStopping = true;
     }
 
     public void resetCBPrefix() {

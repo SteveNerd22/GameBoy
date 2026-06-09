@@ -3,10 +3,10 @@ package org.example.cpu.pipeline.instructions;
 import org.example.cpu.SM83;
 
 @CpuOpcode(value = {
-        0x17, // RLA
-        0x1F  // RRA
+        0x07, // RLCA (Rotate Left Circular Accumulator)
+        0x0F  // RRCA (Rotate Right Circular Accumulator)
 })
-public final class Opcode_RotateAccumulator extends CpuInstruction {
+public final class Opcode_RotateCircularAccumulator extends CpuInstruction {
 
     @Override
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
@@ -16,9 +16,9 @@ public final class Opcode_RotateAccumulator extends CpuInstruction {
             boolean isRightRotate = (opcode & 0x08) != 0;
 
             if (isRightRotate) {
-                newFlags = cpu.alu.rra(cpu.F.get());
+                newFlags = cpu.alu.rrca();
             } else {
-                newFlags = cpu.alu.rla(cpu.F.get());
+                newFlags = cpu.alu.rlca();
             }
 
             cpu.A.sampleSoCBus();
@@ -27,6 +27,6 @@ public final class Opcode_RotateAccumulator extends CpuInstruction {
             return true;
         }
 
-        throw new IllegalStateException("Step non valido per Rotazioni Accumulatore: " + step);
+        throw new IllegalStateException("Step non valido per Rotazioni Circolari Accumulatore: " + step);
     }
 }

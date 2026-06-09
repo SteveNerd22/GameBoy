@@ -315,6 +315,46 @@ public class Alu implements BusWriter {
         return newFlags;
     }
 
+    /**
+     * RRCA -> Ruota l'accumulatore a destra in modo circolare.
+     * Z, N, H vengono azzerati. C prende il vecchio Bit 0. Il bit 0 rientra nel Bit 7.
+     */
+    public int rrca() {
+        int currentA = regToAluBus1.sampleByte();
+        // Il bit 0 è quello che esce a destra
+        int bit0 = currentA & 0x01;
+
+        // Sposta a destra e inserisci il bit uscito direttamente nel bit 7 (0x80)
+        int result = ((currentA >>> 1) | (bit0 << 7)) & 0xFF;
+
+        // Invia il risultato sul SoCData bus per il campionamento della CPU
+        soCData.broadcast(this, new ByteData(result));
+
+        // Flag dell'SM83 per RRCA: Z=0, N=0, H=0, C=bit0
+        int newFlags = 0;
+        if (bit0 == 1) newFlags |= FLAG_C;
+
+        return newFlags;
+    }
+
+    /**
+     * RLCA -> Ruota l'accumulatore a sinistra in modo circolare.
+     * Z, N, H vengono azzerati. C prende il vecchio Bit 7. Il bit 7 rientra nel Bit 0.
+     */
+    public int rlca() {
+        int currentA = regToAluBus1.sampleByte();
+        int bit7 = (currentA >> 7) & 0x01;
+
+        int result = ((currentA << 1) | bit7) & 0xFF;
+
+        soCData.broadcast(this, new ByteData(result));
+
+        int newFlags = 0;
+        if (bit7 == 1) newFlags |= FLAG_C;
+
+        return newFlags;
+    }
+
 
     private String getAluFlagsString(int f) {
         return String.format("[%s%s%s%s]",
