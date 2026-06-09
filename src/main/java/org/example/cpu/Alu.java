@@ -40,7 +40,7 @@ public class Alu implements BusWriter {
         if (((op1 & 0x0F) + (op2 & 0x0F)) > 0x0F) newFlags |= FLAG_H;
         if ((op1 + op2) > 0xFF) newFlags |= FLAG_C;
 
-        if(Main.DEBUG)
+        if(Main.LOG_ALU_ENABLED)
             System.out.printf("[ALU ADD] 0x%02X + 0x%02X = 0x%02X | Flags Generati: %s (Raw: 0x%02X)\n",
                     op1, op2, result, getAluFlagsString(newFlags), newFlags);
 
@@ -62,7 +62,7 @@ public class Alu implements BusWriter {
         if (((op1 & 0x0F) + (op2 & 0x0F) + cy) > 0x0F) newFlags |= FLAG_H;
         if ((op1 + op2 + cy) > 0xFF) newFlags |= FLAG_C;
 
-        if(Main.DEBUG)
+        if(Main.LOG_ALU_ENABLED)
             System.out.printf("[ALU ADC] 0x%02X + 0x%02X +0x%02X = 0x%02X | Flags Generati: %s (Raw: 0x%02X)\n",
                     op1, op2, cy, result, getAluFlagsString(newFlags), newFlags);
 
@@ -270,6 +270,51 @@ public class Alu implements BusWriter {
         return newFlags;
     }
 
+    /**
+     * RLA -> Ruota l'accumulatore a sinistra attraverso il Carry Flag.
+     * Z, N, H vengono azzerati. C prende il vecchio Bit 7.
+     */
+    public int rla(int currentFlags) {
+        int oldCarry = ((currentFlags & FLAG_C) != 0) ? 1 : 0;
+
+        int currentA = regToAluBus1.sampleByte();
+        int bit7 = (currentA >> 7) & 0x01;
+
+        // Sposta a sinistra e inserisci il vecchio carry al bit 0
+        int result = ((currentA << 1) | oldCarry) & 0xFF;
+
+        // Invia il risultato sul SoCData bus se l'architettura lo richiede per il campionamento
+        soCData.broadcast(this, new ByteData(result));
+
+        // Flag dell'SM83 per RLA: Z=0, N=0, H=0, C=bit7
+        int newFlags = 0;
+        if (bit7 == 1) newFlags |= FLAG_C;
+
+        return newFlags;
+    }
+
+    /**
+     * RRA -> Ruota l'accumulatore a destra attraverso il Carry Flag.
+     * Z, N, H vengono azzerati. C prende il vecchio Bit 0.
+     */
+    public int rra(int currentFlags) {
+        int currentA = regToAluBus1.sampleByte();
+        int oldCarry = ((currentFlags & FLAG_C) != 0) ? 1 : 0;
+        int bit0 = currentA & 0x01;
+
+        // Sposta a destra e inserisci il vecchio carry al bit 7 (0x80)
+        int result = ((currentA >> 1) | (oldCarry << 7)) & 0xFF;
+
+        // Invia il risultato sul SoCData bus
+        soCData.broadcast(this, new ByteData(result));
+
+        // Flag dell'SM83 per RRA: Z=0, N=0, H=0, C=bit0
+        int newFlags = 0;
+        if (bit0 == 1) newFlags |= FLAG_C;
+
+        return newFlags;
+    }
+
 
     private String getAluFlagsString(int f) {
         return String.format("[%s%s%s%s]",
@@ -297,7 +342,7 @@ public class Alu implements BusWriter {
         if (fullSum > 0xFF) {
             flags |= FLAG_C;
         }
-        if(Main.DEBUG)
+        if(Main.LOG_ALU_ENABLED)
             System.out.printf("[ALU CPB] 0x%02X + 0x%02X = 0x%02X | Flags Generati: %s (Raw: 0x%02X)\n", val1, val2, lastResult8Bit, getAluFlagsString(flags), flags);
 
         return flags;

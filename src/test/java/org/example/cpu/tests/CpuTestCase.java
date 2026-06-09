@@ -23,8 +23,6 @@ public interface CpuTestCase {
         System.out.println("   STANDALONE PIPELINE TRACE (EVENT-DRIVEN): " + getName().toUpperCase());
         System.out.println("=======================================================================================");
 
-        Main.DEBUG = true;
-
         // 1. Istanziamo la scheda madre
         GameBoy gb = new GameBoy();
         SM83 cpu = gb.getCpu();

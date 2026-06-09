@@ -20,9 +20,6 @@ public final class CpuTestSuiteRunner {
         System.out.println("==================================================");
 
         List<CpuTestCase> tests = discoverTestCases(TEST_PACKAGE);
-
-        Main.DEBUG = false;
-
         GameBoy gameBoy = new GameBoy();
 
         MMU mmu = gameBoy.getMmu();

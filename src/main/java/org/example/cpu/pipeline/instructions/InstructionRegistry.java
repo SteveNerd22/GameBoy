@@ -48,7 +48,7 @@ public class InstructionRegistry {
                 }
             }
         }
-        if (Main.DEBUG) {
+        if (Main.LOG_INIT_ENABLED) {
             System.out.println(registeredOpcodes());
         }
     }
