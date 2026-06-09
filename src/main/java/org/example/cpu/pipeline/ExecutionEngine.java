@@ -30,8 +30,6 @@ public class ExecutionEngine {
             return;
         }
 
-        cpu.PC.emit();
-
         currentInstruction.execute(cpu);
 
 

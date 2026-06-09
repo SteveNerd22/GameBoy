@@ -30,7 +30,7 @@ public final class Opcode_JumpRelativeConditional extends CpuInstruction {
                 cpu.PC.getLow().emitToAluBus2();
                 int flags = cpu.alu.cpb();
                 cpu.Z.sampleSoCBus();
-                cpu.emitHighPCHOnAddressBus();
+                cpu.emitPCHOnAddressBus();
                 boolean cpb_sign = (flags & 0x80) != 0;
 
                 if(cpb_sign && !z_sign)

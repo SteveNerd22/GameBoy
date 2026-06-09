@@ -122,7 +122,7 @@ public class SM83 implements BusWriter {
         aluBus2.broadcast(this, new ByteData(value));
     }
 
-    public void emitHighPCHOnAddressBus() {
+    public void emitPCHOnAddressBus() {
         this.SoCAddress.broadcast(this, new AddressData(PC.getHigh().get() << 8));
     }
 }

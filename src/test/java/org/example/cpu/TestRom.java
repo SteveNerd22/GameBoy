@@ -14,6 +14,8 @@ public class TestRom {
 
         System.out.println("🎮 Inizializzazione sessione di test per Pokémon Rosso...");
         debugger
+                .withoutLogging()
+                .withMemoryLogging(false, true)
                 .runNonStop()
                 .onEnding(new EmulationEndingHandler() {
                     @Override
@@ -49,7 +51,6 @@ public class TestRom {
                         debugger.executeCommand("reg", ctx);
                     }
                 })
-                .redirectErrorsToFile("pippo.log")
                 .start(romPath);
     }
 }

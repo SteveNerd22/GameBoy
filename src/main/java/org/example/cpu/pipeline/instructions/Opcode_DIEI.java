@@ -11,6 +11,7 @@ public final class Opcode_DIEI extends CpuInstruction{
                 cpu.controlUnit.disableInterrupt();
             else
                 cpu.controlUnit.enableInterrupt();
+            cpu.PC.emit();
             return true;
         }
         throw new IllegalStateException("Step non valido per DI: " + step);

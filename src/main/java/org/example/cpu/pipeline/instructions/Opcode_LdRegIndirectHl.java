@@ -18,6 +18,7 @@ public final class Opcode_LdRegIndirectHl extends CpuInstruction {
                 Register destRegister = resolveDestRegister(opcode, cpu);
                 cpu.Z.emitToInternalData();
                 destRegister.sampleInternalData();
+                cpu.PC.emit();
                 return true;
         }
 

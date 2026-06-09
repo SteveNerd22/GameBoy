@@ -3,16 +3,18 @@ package org.example;
 public class Main {
     // 🎭 MASCHERE DI BIT GLOBALI
     public static final int LOG_NONE       = 0;
-    public static final int LOG_STATUS     = 1; // 1
-    public static final int LOG_INIT       = 1 << 1; // 2
-    public static final int LOG_BUS        = 1 << 2; // 4
-    public static final int LOG_ALU        = 1 << 3; // 8
-    public static final int LOG_REGISTERS  = 1 << 4; // 16
-    public static final int LOG_INTERRUPT  = 1 << 5; // 32
-    public static final int LOG_PPU        = 1 << 6; // 64
+    public static final int LOG_STATUS     = 1;          // 1
+    public static final int LOG_INIT       = 1 << 1;     // 2
+    public static final int LOG_BUS        = 1 << 2;     // 4
+    public static final int LOG_ALU        = 1 << 3;     // 8
+    public static final int LOG_REGISTERS  = 1 << 4;     // 16
+    public static final int LOG_INTERRUPT  = 1 << 5;     // 32
+    public static final int LOG_PPU        = 1 << 6;     // 64
+    public static final int LOG_RAM_READ   = 1 << 7;     // 128
+    public static final int LOG_RAM_WRITE  = 1 << 8;     // 256
     public static final int LOG_ALL        = 0xFFFFFFFF;
 
-    // 🎛️ FLAG GLOBALI MUTABILI (Status e Init attivi di default)
+    // 🎛️ FLAG GLOBALI MUTABILI
     public static boolean LOG_STATUS_ENABLED    = true;
     public static boolean LOG_INIT_ENABLED      = false;
     public static boolean LOG_BUS_ENABLED       = false;
@@ -20,6 +22,8 @@ public class Main {
     public static boolean LOG_REGISTERS_ENABLED = false;
     public static boolean LOG_INTERRUPT_ENABLED = false;
     public static boolean LOG_PPU_ENABLED       = false;
+    public static boolean LOG_RAM_READ_ENABLED  = false;
+    public static boolean LOG_RAM_WRITE_ENABLED = false;
 
     /**
      * Il metodo che spacchetta l'intero con l'operazione OR e imposta i booleani statici.
@@ -32,6 +36,8 @@ public class Main {
         LOG_REGISTERS_ENABLED = (logMask & LOG_REGISTERS) != 0;
         LOG_INTERRUPT_ENABLED = (logMask & LOG_INTERRUPT) != 0;
         LOG_PPU_ENABLED       = (logMask & LOG_PPU) != 0;
+        LOG_RAM_READ_ENABLED  = (logMask & LOG_RAM_READ) != 0;
+        LOG_RAM_WRITE_ENABLED = (logMask & LOG_RAM_WRITE) != 0;
     }
 
     /**
@@ -46,21 +52,17 @@ public class Main {
         if (LOG_REGISTERS_ENABLED) mask |= LOG_REGISTERS;
         if (LOG_INTERRUPT_ENABLED) mask |= LOG_INTERRUPT;
         if (LOG_PPU_ENABLED)       mask |= LOG_PPU;
+        if (LOG_RAM_READ_ENABLED)  mask |= LOG_RAM_READ;
+        if (LOG_RAM_WRITE_ENABLED) mask |= LOG_RAM_WRITE;
         return mask;
     }
 
-    /**
-     * Aggiunge uno o più flag alla configurazione corrente senza spegnere gli altri.
-     */
     public static void addLogging(int logMask) {
-        applyLogMask(currentLogMask() | logMask); // Operatore OR unisce i bit
+        applyLogMask(currentLogMask() | logMask);
     }
 
-    /**
-     * Rimuove uno o più flag dalla configurazione corrente lasciando gli altri intatti.
-     */
     public static void removeLogging(int logMask) {
-        applyLogMask(currentLogMask() & ~logMask); // Operatore AND NOT spegne i bit scelti
+        applyLogMask(currentLogMask() & ~logMask);
     }
 
     public static void main(String[] args) {

@@ -18,6 +18,7 @@ public final class Opcode_LdAIndirectBcDe extends CpuInstruction {
             case 1 -> {
                 cpu.Z.emitToInternalData();
                 cpu.A.sampleInternalData();
+                cpu.PC.emit();
                 return true;
             }
         }

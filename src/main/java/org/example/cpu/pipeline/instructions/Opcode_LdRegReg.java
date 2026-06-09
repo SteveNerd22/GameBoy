@@ -21,6 +21,7 @@ public final class Opcode_LdRegReg extends CpuInstruction {
 
         src.emitToInternalData();
         dest.sampleInternalData();
+        cpu.PC.emit();
 
         return true;
     }

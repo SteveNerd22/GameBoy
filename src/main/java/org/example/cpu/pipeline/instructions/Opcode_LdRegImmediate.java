@@ -20,6 +20,7 @@ public final class Opcode_LdRegImmediate extends CpuInstruction {
                 Register dest = resolveDestRegister(opcode, cpu);
                 cpu.Z.emitToInternalData();
                 dest.sampleInternalData();
+                cpu.PC.emit();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per LD r, n: " + step);

@@ -3,10 +3,8 @@ package org.example.cpu;
 import org.example.GameBoy;
 import org.example.Main;
 import org.example.clock.PulseListener;
-import org.example.bus.data.InterruptSignal; // 🔥 Assicurati che questo import sia corretto
+import org.example.bus.data.InterruptSignal;
 import org.example.cpu.commands.*;
-
-import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 
@@ -55,6 +53,12 @@ public class InteractiveDebugger {
 
     public InteractiveDebugger withInitLogging() {
         Main.LOG_INIT_ENABLED = true;
+        return this;
+    }
+
+    public InteractiveDebugger withMemoryLogging(boolean read, boolean write) {
+        Main.LOG_RAM_READ_ENABLED = read;
+        Main.LOG_RAM_WRITE_ENABLED = write;
         return this;
     }
 

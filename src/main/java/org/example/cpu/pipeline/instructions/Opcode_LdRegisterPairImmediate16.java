@@ -24,6 +24,7 @@ public final class Opcode_LdRegisterPairImmediate16 extends CpuInstruction {
             case 2 -> {
                 RegisterPair targetPair = resolveTargetPair(opcode, cpu);
                 targetPair.set(cpu.WZ.get());
+                cpu.PC.emit();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per LD rr, nn: " + step);

@@ -1,5 +1,6 @@
 package org.example.mmu;
 
+import org.example.Main;
 import org.example.bus.*;
 import org.example.bus.data.ByteData;
 import org.example.bus.data.InterruptSignal;
@@ -65,12 +66,28 @@ public class MMU implements BusWriter {
     }
 
     private void executeMemoryAccess(BusWriter requestor) {
+        String requestorName = requestor != null ? requestor.getClass().getSimpleName() : "UNKNOWN";
+
         if ((this.currentControlSignal & InterruptSignal.MEM_RD) != 0) {
             int byteRead = readPhysicalMemory(this.latchedAddress, requestor);
+
+            if (Main.LOG_RAM_READ_ENABLED) {
+                System.out.printf("[MMU READ]  Address: 0x%04X => Data: 0x%02X | Requestor: %s\n",
+                        this.latchedAddress, byteRead, requestorName);
+            }
+
             this.dataBus.broadcast(this, new ByteData(byteRead));
         }
+
         if ((this.currentControlSignal & InterruptSignal.MEM_WR) != 0) {
-            writePhysicalMemory(latchedAddress, dataBus.sampleByte(), requestor);
+            int byteToWrite = dataBus.sampleByte();
+
+            if (Main.LOG_RAM_WRITE_ENABLED) {
+                System.out.printf("[MMU WRITE] Address: 0x%04X <= Data: 0x%02X | Requestor: %s\n",
+                        this.latchedAddress, byteToWrite, requestorName);
+            }
+
+            writePhysicalMemory(latchedAddress, byteToWrite, requestor);
         }
     }
 

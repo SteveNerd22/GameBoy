@@ -18,6 +18,7 @@ public final class Opcode_LdIndirectHlReg extends CpuInstruction {
             }
             case 1 -> {
                 cpu.controlUnit.sendReadSignal();
+                cpu.PC.emit();
                 return true;
             }
             default -> throw new IllegalStateException("Step non valido per LD (HL), r: " + step);

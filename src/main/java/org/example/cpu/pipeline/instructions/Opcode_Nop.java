@@ -7,6 +7,7 @@ public final class Opcode_Nop extends CpuInstruction {
 
     @Override
     protected boolean executeStep(int step, int opcode, SM83 cpu) {
+        cpu.PC.emit();
         return true;
     }
 }
